@@ -40,11 +40,11 @@ class RewardFunction:
 		robot_position = msg
 		robot_position_x = robot_position.x
 		robot_position_y = robot_position.y
-		if abs(robot_position.x - self.reward_location_xy[0]) < 0.1 and abs(robot_position.y - \
-		                                                                  self.reward_location_xy[1]) < 0.1:
+		if abs(robot_position.x - self.reward_location_xy[0]) < 0.15 and abs(robot_position.y - \
+		                                                                  self.reward_location_xy[1]) < 0.15:
 			#print("Found the reward!!!")
 			#print(self.coords, self.reward_location_xy)
-			self.reward = 2
+			self.reward = 1
 		else:
 			self.reward = 0
 

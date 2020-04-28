@@ -31,50 +31,75 @@ import matplotlib.pyplot as plt
 # plt.show()
 
 # testing sigmoids
-# inputs = np.arange(0, 150)
+# inputs = np.arange(0, 100)
 # c1 = 0.1
-# c2 = 60
+# c2 = 20
 # outputs = 1 / (1 + np.exp(-c1 * (inputs - c2)))
 # plt.plot(inputs, outputs)
 # plt.show()
 
 
-def compute_place_cell_activities(coord_x, coord_y, reward, movement=False):
-	'''
+# def compute_place_cell_activities(coord_x, coord_y, reward, movement=False):
+# 	'''
+#
+# 	:param coord_x: float, the x coordinate (m)
+# 	:param coord_y: float, the y coordinate (m)
+# 	:param reward: float, the reward value. If reward != 0, the agent should be resting and the C parameter set
+# 	to 1 Hz
+# 	:param movement: bool, indicates whether the robot moved in the current time step or not
+# 	:return: numpy array, vector of the networks place cell activities
+# 	'''
+#
+# 	d = 0.1  # m
+# 	network_size_pc = 100
+# 	no_cells_per_m = np.sqrt(network_size_pc) / 2  # 5
+# 	no_cell_it = int(np.sqrt(network_size_pc))  # 10, the number of cells along one row of the network
+# 	if movement or reward != 0:
+# 		C = 50  # Hz
+# 	else:
+# 		C = 0  # Hz
+# 	cells_activity = np.zeros((no_cell_it, no_cell_it))
+# 	place = np.array((coord_x, coord_y))
+# 	for x in range(no_cell_it):
+# 		for y in range(no_cell_it):
+# 			place_cell_field_location = np.array(((float(x) / 5) - 0.9, (-float(y) / 5) + 0.9))
+# 			cells_activity[y, x] = C * np.exp(
+# 				-1.0 / (2.0 * d ** 2.0) * np.dot((place - place_cell_field_location),
+# 				                                 (place - place_cell_field_location)))
+# 	cell_activities_array = cells_activity.flatten()
+# 	return cell_activities_array
+#
+# coord_x = -0.3
+# coord_y = 0.7
+#
+# test_output = compute_place_cell_activities(coord_x, coord_y, 0, True)
+# # print(test_output)
+#
+# for x in range(10):
+# 	print((float(x) / 5) - 0.9)
 
-	:param coord_x: float, the x coordinate (m)
-	:param coord_y: float, the y coordinate (m)
-	:param reward: float, the reward value. If reward != 0, the agent should be resting and the C parameter set
-	to 1 Hz
-	:param movement: bool, indicates whether the robot moved in the current time step or not
-	:return: numpy array, vector of the networks place cell activities
-	'''
+# sigma = 10
+# degs = np.arange(0, 360, 5)
+# centre = 184.5
+# a = 1
+# ac_output = np.zeros(72)
+# for i in range(72):
+# 	diff = float(abs(centre - degs[i]))
+# 	if diff > 180:
+# 		diff = 360 - diff
+# 	ac_output[i] = a * np.exp(-(diff) ** 2 / sigma ** 2)
+# plt.plot(degs, ac_output)
+# plt.show()
 
-	d = 0.1  # m
-	network_size_pc = 100
-	no_cells_per_m = np.sqrt(network_size_pc) / 2  # 5
-	no_cell_it = int(np.sqrt(network_size_pc))  # 10, the number of cells along one row of the network
-	if movement or reward != 0:
-		C = 50  # Hz
-	else:
-		C = 0  # Hz
-	cells_activity = np.zeros((no_cell_it, no_cell_it))
-	place = np.array((coord_x, coord_y))
-	for x in range(no_cell_it):
-		for y in range(no_cell_it):
-			place_cell_field_location = np.array(((float(x) / 5) - 0.9, (-float(y) / 5) + 0.9))
-			cells_activity[y, x] = C * np.exp(
-				-1.0 / (2.0 * d ** 2.0) * np.dot((place - place_cell_field_location),
-				                                 (place - place_cell_field_location)))
-	cell_activities_array = cells_activity.flatten()
-	return cell_activities_array
 
-coord_x = -0.3
-coord_y = 0.7
 
-test_output = compute_place_cell_activities(coord_x, coord_y, 0, True)
-# print(test_output)
 
-for x in range(10):
-	print((float(x) / 5) - 0.9)
 
+# acs = theta_to_action_cell(np.radians(0))
+# theta = np.degrees(action_cell_to_theta(acs))
+#
+# import csv
+# with open('data/trial_times_WITH_REPLAY.csv', 'a') as \
+# 		trial_times_file:
+# 	wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
+# 	wr.writerow([1] + [1, 2, 3, 4, 5, 10])
