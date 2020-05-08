@@ -78,7 +78,7 @@ class RoboReplay():
 		self.network_size_ac = 72 # every 5 degs
 		self.target_theta = 0
 		self.eta = 0.05 # learning rate
-		self.tau_elig = 0.5 # eligibility trace time constant
+		self.tau_elig = 1 # eligibility trace time constant
 		self.sigma = 0.1 # standard deviation in the action cell noise
 
 		# set action cell variables initial conditions
@@ -90,6 +90,7 @@ class RoboReplay():
 
 		# set eligibility trace initial condition
 		self.elig_trace = np.zeros((self.network_size_ac, self.network_size_pc))
+		self.elig_trace_for_replay = np.zeros(self.network_size_ac)
 
 		# set reward prediction initial condition
 		self.reward_pred = 0
@@ -372,6 +373,28 @@ class RoboReplay():
 
 		return self.normalise_weights_pc_ac(weights_updated)
 
+	def weight_updates_for_replay(self, weights_current, reward_pred_error, eta, sigma, action_cells,
+	                                 elig_for_replay, place_cells, delta_t):
+		'''
+		# TODO needs testing
+		:param weights_current: numpy array, 72x100
+		:param reward_pred_error: float
+		:param elig: numpy array, 72x100 of the eligibility trace
+		:param eta: float, learning rate
+		:param sigma: float, standard deviation in the action cell output noise
+		:param delta_t: float, time step
+		:return: numpy array, 72x100 updated values for the weights
+		'''
+
+		weights_updated = weights_current.copy()
+		sigma_squared = sigma**2
+		for i in range(len(weights_current[:, 0])): # iterate through rows, with size of action cells, with index i
+			for j in range(len(weights_current[0, :])): # iterate through columns, 100 of them, with index j
+				weights_updated[i, j] += (eta * reward_pred_error * (1 / sigma_squared) * action_cells[i] *
+				                          (1 - action_cells[i]) * place_cells[j] * elig_for_replay[i]) * delta_t
+
+		return self.normalise_weights_pc_ac(weights_updated)
+
 	def normalise_weights_pc_ac(self, weights): # test complete, working well
 		'''
 		normalises the weight matrix between pc cells and action cells
@@ -412,16 +435,15 @@ class RoboReplay():
 
 		return updated_eligibility_trace
 
-	def update_eligibility_trace_replay(self, current_eligibility_trace, place_cells, action_cells,
-	                                    action_cells_using_elig, tau, delta_t):
+	def update_eligibility_trace_for_replay(self, current_eligibility_trace, action_cells,
+	                                    action_cells_with_noise, tau, delta_t):
 		'''
 				#TODO needs testing
 				Updates the eligibility trace during a replay event. Since MiRo is not taking any actual actions
 				anymore, the difference in a chosen action and MiRo's predicted action doesn't make sense to have
 				anymore (the action_cell_noise[i] - action_cells[i] term above). Since this difference term has gone, A is set to 0.1 to avoid unrealistically high values
-				:param current_eligibility_trace: numpy array, 4x100
-				:param place_cells: numpy array, 100x1 of the current place cell values
-				:param action_cells: numpy array, 4x1 of the current action cell values
+				:param current_eligibility_trace: numpy array, 72x1
+				:param action_cells: numpy array, 72x1 of the current action cell values
 				:param tau: float, time constant
 				:param delta_t: float, time step
 				:return: numpy array, 4x100 updated array of the eligibility trace
@@ -429,10 +451,9 @@ class RoboReplay():
 
 		A = 1 # Constant
 		updated_eligibility_trace = current_eligibility_trace.copy()
-		for i in range(len(current_eligibility_trace[:, 0])):  # iterate through rows, 72 of them, with index i
-			for j in range(len(current_eligibility_trace[0, :])):  # iterate through columns, 100 of them, with index j
-				Y = (action_cells_using_elig[i] - action_cells[i]) * (1 - action_cells[i]) * action_cells[i] * place_cells[j]
-				updated_eligibility_trace[i, j] += (-current_eligibility_trace[i, j] / tau + A * Y) * delta_t
+		for i in range(len(current_eligibility_trace)):  # iterate through eligibility traces, 72 of them
+			Y = (action_cells_with_noise[i] - action_cells[i])
+			updated_eligibility_trace[i] += (-current_eligibility_trace[i] / tau + A * Y) * delta_t
 
 		return updated_eligibility_trace
 
@@ -563,10 +584,18 @@ class RoboReplay():
 		while time.time() - t_init < 1:
 			self.pub_wheels.publish(self.msg_wheels)
 			# try giving a negative reward if MiRo moves into a wall
-		for i in range(10):
-			self.weights_pc_ac = self.weight_updates(self.weights_pc_ac, -1, self.elig_trace, self.eta, self.sigma,
-			                                         self.delta_t)
-		self.elig_trace = np.zeros((self.network_size_ac, self.network_size_pc))  # reset the eligibility trace
+			if time.time() - t_init < 0.5: # update the weights for 0.5s
+				self.weights_pc_ac = self.weight_updates_for_replay(
+					self.weights_pc_ac,
+					-1,
+					self.eta,
+					self.sigma,
+					self.action_cell_vals,
+					self.elig_trace_for_replay,
+					self.place_cell_rates,
+					self.delta_t)
+
+		self.elig_trace_for_replay = np.zeros(self.network_size_ac)  # reset the eligibility trace
 		self.intrinsic_e = self.intrinsic_e_reset # reset the intrinsic excitability (for fairness since the elig
 		# trace is reset as well)
 		p_anti_clock = 1
@@ -690,6 +719,7 @@ class RoboReplay():
 			action_cell_vals_noise_prev = self.action_cell_vals_noise
 			weights_pc_ac_prev = self.weights_pc_ac.copy()
 			elig_trace_prev = self.elig_trace.copy()
+			elig_trace_for_replay_prev = self.elig_trace_for_replay.copy()
 
 
 			if self.reward_val == 0:
@@ -714,6 +744,10 @@ class RoboReplay():
 				                                                action_cell_vals_prev, action_cell_vals_noise_prev,
 				                                                self.tau_elig, self.delta_t) # noise is calculated from
 				# MiRo's current body pose (i.e. this is the real value for the action cells)
+				self.elig_trace_for_replay = self.update_eligibility_trace_for_replay(elig_trace_for_replay_prev,
+				                                                                      action_cell_vals_prev,
+				                                                                      action_cell_vals_noise_prev,
+				                                                                      self.tau_elig, self.delta_t)
 
 			else:
 				# Run a reverse replay
@@ -730,11 +764,10 @@ class RoboReplay():
 
 				if (1 < t_replay < 1.1) or (2 < t_replay < 2.1):
 					# To run reverse replays
-					self.weights_pc_ac = self.weight_updates(weights_pc_ac_prev, self.reward_val, elig_trace_prev,
-					                                         self.eta, self.sigma, self.delta_t)
-					I_place = self.I_place
+					I_place = 2 * self.I_place
 				else:
 					I_place = np.zeros(self.network_size_pc)
+
 				# set variables at the next time step to the ones now
 				self.currents = self.update_currents(currents_prev, self.delta_t, intrinsic_e_prev,
 				                                     network_weights_prev, place_cell_rates_prev, stp_d_prev, stp_f_prev,
@@ -744,25 +777,17 @@ class RoboReplay():
 				self.stp_d, self.stp_f = self.update_STP(stp_d_prev, stp_f_prev, self.delta_t, place_cell_rates_prev)
 				self.I_inh = self.update_I_inh(I_inh_prev, self.delta_t, self.w_inh, place_cell_rates_prev)
 
-				# For the reverse replay option, the eligibility trace evolves as normal whilst the action cells are
-				# computed from the place cell inputs only with weights that have the eligibility trace
-				# added to them. It is assumed there is no noise here too.
-				# self.action_cell_vals = self.compute_action_cell_outputs(weights_pc_ac_prev + elig_trace_prev,
-				#                                                          place_cell_rates_prev)
 
 				self.action_cell_vals = self.compute_action_cell_outputs(weights_pc_ac_prev, place_cell_rates_prev)
-				action_cells_using_elig = self.compute_action_cell_outputs(weights_pc_ac_prev + elig_trace_prev, \
-				                                                                              place_cell_rates_prev)
-				self.elig_trace = self.update_eligibility_trace_replay(elig_trace_prev, place_cell_rates_prev,
-				                                                action_cell_vals_prev, action_cells_using_elig,
-				                                                       self.tau_elig, self.delta_t)
-
-				# # All place cells and action cells are set to zero for now during the updates, since we are not
-				# # running reverse replays. This causes the eligibility trace to decay to zero, and is hence the
-				# # non-replay version
-				# self.elig_trace = self.update_eligibility_trace(elig_trace_prev, np.zeros(self.network_size_pc),
-				#                                                 np.zeros(self.network_size_ac), np.zeros(
-				# 		self.network_size_ac), self.tau_elig, self.delta_t)
+				self.weights_pc_ac = self.weight_updates_for_replay(
+					weights_pc_ac_prev,
+					self.reward_val,
+					self.eta,
+					self.sigma,
+					action_cell_vals_prev,
+					elig_trace_for_replay_prev,
+					place_cell_rates_prev,
+					self.delta_t)
 
 				if t_replay > 3:
 					# finish running the replay event, reset variables that need resetting, and go home
@@ -770,7 +795,9 @@ class RoboReplay():
 					self.intrinsic_e = self.intrinsic_e_reset.copy()
 					self.elig_trace = np.zeros((self.network_size_ac, self.network_size_pc)) # reset the eligibility
 					# trace
+					self.elig_trace_for_replay = np.zeros(self.network_size_ac)
 					self.head_random_start_position = True
+					# self.heading_home = True
 					theta_prev = self.body_pose[2] # resets
 
 			############################################################################################################
@@ -818,6 +845,8 @@ class RoboReplay():
 					#       % (ac_direction, ac_magnitude))
 					# print("-------------------------------------------------------------------------------------------")
 
+				# For testing purposes
+				# self.target_theta = 0
 				self.miro_controller(self.target_theta, theta_prev)
 
 			else:
@@ -829,6 +858,7 @@ class RoboReplay():
 			np.save('data/action_cells_vals_72_acs.npy', self.action_cell_vals)
 			np.save('data/weights_72_acs.npy', self.weights_pc_ac)
 			np.save('data/eligibility_trace_72_acs.npy', self.elig_trace)
+			np.save('data/eligibility_trace_acs.npy', self.elig_trace_for_replay)
 
 			# TODO ensure it only save the past 1 min of data
 			# self.time_series.append(self.t)
@@ -847,6 +877,6 @@ class RoboReplay():
 			rate.sleep()
 
 if __name__ == '__main__':
-	for experiment in range(30, 51):
+	for experiment in range(31, 51):
 		robo_replay = RoboReplay(experiment)
 		robo_replay.main()

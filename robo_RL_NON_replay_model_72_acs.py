@@ -77,8 +77,8 @@ class RoboReplay():
 		# model parameters for action cells
 		self.network_size_ac = 72 # every 5 degs
 		self.target_theta = 0
-		self.eta = 0.5 # learning rate
-		self.tau_elig = 0.05 # eligibility trace time constant
+		self.eta = 0.05 # learning rate
+		self.tau_elig = 0.1 # eligibility trace time constant
 		self.sigma = 0.1 # standard deviation in the action cell noise
 
 		# set action cell variables initial conditions
