@@ -14,13 +14,17 @@ import numpy as np
 import os
 import signal
 import sys
+import csv
 import time
 import miro2 as miro
 
 
-class RoboReplay():
+class NetworkSetup():
 
-	def __init__(self):
+	def __init__(self, experiment_number, tau_elig=1, eta=0.05):
+		print("Starting experiment no. " + str(experiment_number) + " with tau_elig = " + str(tau_elig) + " and eta = " +
+		      str(eta))
+
 		# system handling
 		signal.signal(signal.SIGINT, self.signal_handler)
 
@@ -31,13 +35,11 @@ class RoboReplay():
 
 		# subscribe to the reward value
 		topic = topic_base_name + "/reward_value"
-		print("subscribed to", topic)
 		self.sub_reward = rospy.Subscriber(topic, UInt8, self.update_reward, queue_size=5, tcp_nodelay=True)
 		self.reward_val = 0
 
 		# subscribe to Miro's body pose (x, y, theta)
 		topic = topic_base_name + "/sensors/body_pose"
-		print("subscribed to", topic)
 		self.sub_body_pose = rospy.Subscriber(topic, Pose2D, self.callback_body_pose, queue_size=5, tcp_nodelay=True)
 		self.body_pose = np.array((-0.7, 0.0, 0.0))  # pos 0 is x coordinate, pos 1 is y coordinate and pos 2 is theta
 
@@ -76,8 +78,8 @@ class RoboReplay():
 		# model parameters for action cells
 		self.network_size_ac = 72 # every 5 degs
 		self.target_theta = 0
-		self.eta = 0.1 # learning rate
-		self.tau_elig = 1 # eligibility trace time constant
+		self.eta = eta # learning rate
+		self.tau_elig = tau_elig # eligibility trace time constant
 		self.sigma = 0.1 # standard deviation in the action cell noise
 
 		# set action cell variables initial conditions
@@ -105,6 +107,9 @@ class RoboReplay():
 		self.time_series = []
 		self.rates_series = []
 		self.intrinsic_e_series = []
+
+		self.total_number_of_trials = 20
+		self.experiment_number = experiment_number
 
 	def signal_handler(self, sig, frame):
 		# print('\nSaving trial data')
@@ -368,6 +373,28 @@ class RoboReplay():
 
 		return self.normalise_weights_pc_ac(weights_updated)
 
+	def weight_updates_for_replay(self, weights_current, reward_pred_error, eta, sigma, action_cells,
+	                                 elig_for_replay, place_cells, delta_t):
+		'''
+		# TODO needs testing
+		:param weights_current: numpy array, 72x100
+		:param reward_pred_error: float
+		:param elig: numpy array, 72x100 of the eligibility trace
+		:param eta: float, learning rate
+		:param sigma: float, standard deviation in the action cell output noise
+		:param delta_t: float, time step
+		:return: numpy array, 72x100 updated values for the weights
+		'''
+
+		weights_updated = weights_current.copy()
+		sigma_squared = sigma**2
+		for i in range(len(weights_current[:, 0])): # iterate through rows, with size of action cells, with index i
+			for j in range(len(weights_current[0, :])): # iterate through columns, 100 of them, with index j
+				weights_updated[i, j] += (eta * reward_pred_error * (1 / sigma_squared) * action_cells[i] *
+				                          (1 - action_cells[i]) * place_cells[j] * elig_for_replay[i, j]) * delta_t
+
+		return self.normalise_weights_pc_ac(weights_updated)
+
 	def normalise_weights_pc_ac(self, weights): # test complete, working well
 		'''
 		normalises the weight matrix between pc cells and action cells
@@ -376,10 +403,10 @@ class RoboReplay():
 		'''
 
 		for weight_vector_index in range(len(weights[0,:])):
-			# for i in range(self.network_size_ac):
-				# if weights[i, weight_vector_index] < 0:
-				# 	# print('Weight %d, %d is less than 0' %(i, weight_vector_index))
-				# 	weights[i, weight_vector_index] = 0
+			for i in range(self.network_size_ac):
+				if weights[i, weight_vector_index] < 0:
+					# print('Weight %d, %d is less than 0' %(i, weight_vector_index))
+					weights[i, weight_vector_index] = 0
 			squared_sum = 0
 			for i in range(self.network_size_ac):
 				squared_sum += weights[i, weight_vector_index]**2
@@ -511,6 +538,7 @@ class RoboReplay():
 				omega = A * (diff + 2 * np.pi)
 			self.msg_wheels.twist.linear.x = vel
 			self.msg_wheels.twist.angular.z = omega
+			# self.msg_wheels.twist.angular.z = 0.25 # for testing
 			self.pub_wheels.publish(self.msg_wheels)
 
 	def random_walk(self, current_theta, current_target_theta):
@@ -530,15 +558,21 @@ class RoboReplay():
 
 	def avoid_wall(self):
 		t_init = time.time()
+		t_sim_init = self.t
 		self.msg_wheels.twist.linear.x = -0.1
 		self.msg_wheels.twist.angular.z = 0
 		while time.time() - t_init < 1:
 			self.pub_wheels.publish(self.msg_wheels)
 			# try giving a negative reward if MiRo moves into a wall
-		for i in range(5):
-			self.weights_pc_ac = self.weight_updates(self.weights_pc_ac, -1, self.elig_trace, self.eta, self.sigma,
-			                                         self.delta_t)
+			if self.t - t_sim_init < 0.5: # update the weights for 0.5s
+				self.weights_pc_ac = self.weight_updates(self.weights_pc_ac, -1,
+				                                         self.elig_trace,
+				                                         self.eta, self.sigma, self.delta_t)
+				self.t += 0.01
+
 		self.elig_trace = np.zeros((self.network_size_ac, self.network_size_pc))  # reset the eligibility trace
+		self.intrinsic_e = self.intrinsic_e_reset # reset the intrinsic excitability (for fairness since the elig
+		# trace is reset as well)
 		p_anti_clock = 1
 		self.msg_wheels.twist.linear.x = 0
 		if np.random.rand() < p_anti_clock:
@@ -614,189 +648,3 @@ class RoboReplay():
 		self.pub_wheels.publish(self.msg_wheels)
 		time.sleep(2) # pause for a couple of seconds before continuing
 
-########################################################################################################################
-# The main portion of the program that starts the loop, runs the MiRo controller and updates all the model variables
-# TODO reset the eligibility trace when MiRo has found a reward
-	def main(self):
-		self.t = 0 # s
-		t_replay = 0 # s
-		t_last_command = 0 # s, time since last motor command
-		coords_prev = self.body_pose[0:2]
-		theta_prev = self.body_pose[2]
-		time.sleep(2)  # wait for two seconds for subscriber messages to update at the start
-		# self.intrinsic_e = np.ones(self.network_size) # used to test the network with no intrinsic plasticity
-		while not rospy.core.is_shutdown():
-			rate = rospy.Rate(int(1 / self.delta_t))
-			self.t += self.delta_t
-
-			############################################################################################################
-			# Network updates
-
-			coords = self.body_pose[0:2]
-			theta = self.body_pose[2]
-			movement_x = coords[0] - coords_prev[0]
-			movement_y = coords[1] - coords_prev[1]
-			if movement_x > 0.0 or movement_y > 0.0:  # at least a movement velocity of 0.002 / delta_t is required
-				movement = True
-			else:
-				movement = False
-			movement = True
-			# Set current variable values to the previous ones
-			coords_prev = coords.copy()
-			theta_prev = theta.copy()
-			place_cell_rates_prev = self.place_cell_rates.copy()
-			currents_prev = self.currents.copy()
-			intrinsic_e_prev = self.intrinsic_e.copy()
-			stp_d_prev = self.stp_d.copy()
-			stp_f_prev = self.stp_f.copy()
-			I_place_prev = self.I_place.copy()
-			I_inh_prev = self.I_inh
-			network_weights_prev = self.network_weights_pc.copy()
-
-			action_cell_vals_prev = self.action_cell_vals.copy()
-			action_cell_vals_noise_prev = self.action_cell_vals_noise
-			weights_pc_ac_prev = self.weights_pc_ac.copy()
-			elig_trace_prev = self.elig_trace.copy()
-
-
-			if self.reward_val == 0:
-				self.replay = False
-				t_replay = 0
-				# Run standard activity during exploration
-				# Update the variables
-				self.currents = self.update_currents(currents_prev, self.delta_t, intrinsic_e_prev,
-				                                     network_weights_prev, place_cell_rates_prev, stp_d_prev, stp_f_prev,
-				                                     I_inh_prev, I_place_prev)
-				self.place_cell_rates = self.compute_rates(self.currents)
-				self.intrinsic_e = self.update_intrinsic_e(intrinsic_e_prev, self.delta_t, place_cell_rates_prev)
-				self.stp_d, self.stp_f = self.update_STP(stp_d_prev, stp_f_prev, self.delta_t, place_cell_rates_prev)
-				self.I_place = self.compute_place_cell_activities(coords_prev[0], coords_prev[1], 0, movement)
-				self.I_inh = self.update_I_inh(I_inh_prev, self.delta_t, self.w_inh, place_cell_rates_prev)
-
-				self.action_cell_vals = self.compute_action_cell_outputs(weights_pc_ac_prev, place_cell_rates_prev)
-				self.action_cell_vals_noise = self.theta_to_action_cell(theta_prev)
-				# print(self.action_cell_vals_noise, self.action_cell_vals)
-				self.elig_trace = self.update_eligibility_trace(elig_trace_prev, place_cell_rates_prev,
-				                                                action_cell_vals_prev, action_cell_vals_noise_prev,
-				                                                self.tau_elig, self.delta_t) # noise is calculated from
-				# MiRo's current body pose (i.e. this is the real value for the action cells)
-
-
-			else:
-				# Run a reverse replay
-				if not self.replay:
-					# self.weights_pc_ac = self.weight_updates(weights_pc_ac_prev, self.reward_val, elig_trace_prev,
-					#                                          self.eta, self.sigma, self.delta_t) # update once,
-					# for non reverse replay
-					print('Running reverse replay event')
-				self.replay = True
-				t_replay += self.delta_t
-				# reward = np.exp(-self.reward_val * t_replay / 5)  # the reward decays exponentially with time
-				# constant 5. Used for reverse replay implementation
-				#
-				if (1 < t_replay < 1.1) or (3 < t_replay < 3.1) or (5 < t_replay < 5.1) or (7 < t_replay < 7.1):
-					self.weights_pc_ac = self.weight_updates(weights_pc_ac_prev, self.reward_val, elig_trace_prev,
-					                                         self.eta, self.sigma, self.delta_t)
-					I_place = self.I_place
-				else:
-					I_place = np.zeros(self.network_size_pc)
-				# set variables at the next time step to the ones now
-				self.currents = self.update_currents(currents_prev, self.delta_t, intrinsic_e_prev,
-				                                     network_weights_prev, place_cell_rates_prev, stp_d_prev, stp_f_prev,
-				                                     I_inh_prev, I_place, replay=self.replay)
-				self.place_cell_rates = self.compute_rates(self.currents)
-				self.intrinsic_e = self.update_intrinsic_e(intrinsic_e_prev, self.delta_t, place_cell_rates_prev)
-				self.stp_d, self.stp_f = self.update_STP(stp_d_prev, stp_f_prev, self.delta_t, place_cell_rates_prev)
-				self.I_inh = self.update_I_inh(I_inh_prev, self.delta_t, self.w_inh, place_cell_rates_prev)
-
-				# For the reverse replay option, the eligibility trace evolves as normal whilst the action cells are
-				# computed from the place cell inputs only with weights that have the eligibility trace
-				# added to them. It is assumed there is no noise here too.
-				self.action_cell_vals = self.compute_action_cell_outputs(weights_pc_ac_prev + elig_trace_prev,
-				                                                         place_cell_rates_prev)
-				self.action_cell_vals_noise = self.add_noise_to_action_cell_outputs(self.action_cell_vals, self.sigma)
-				self.elig_trace = self.update_eligibility_trace(elig_trace_prev, place_cell_rates_prev,
-				                                                action_cell_vals_prev, action_cell_vals_noise_prev,
-				                                                self.tau_elig, self.delta_t)
-
-				# # All place cells and action cells are set to zero for now during the updates, since we are not
-				# # running reverse replays. This causes the eligibility trace to decay to zero, and is hence the
-				# # non-replay version
-				# self.elig_trace = self.update_eligibility_trace(elig_trace_prev, np.zeros(self.network_size_pc),
-				#                                                 np.zeros(self.network_size_ac), np.zeros(
-				# 		self.network_size_ac), self.tau_elig, self.delta_t)
-
-				if t_replay > 9:
-					# finish running the replay event, reset variables that need resetting, and go home
-					self.replay = False
-					self.intrinsic_e = self.intrinsic_e_reset.copy()
-					self.elig_trace = np.zeros((self.network_size_ac, self.network_size_pc)) # reset the eligibility
-					# trace
-					self.head_random_start_position = True
-					theta_prev = self.body_pose[2] # resets
-
-			############################################################################################################
-			# Miro controller
-			if self.heading_home:
-				print("Heading home...")
-				self.head_to_position(self.home_pose)
-				print("Reached home!")
-				self.heading_home = False
-				theta_prev = self.body_pose[2] # need to reset for the controller below
-			elif self.head_random_start_position:
-				randx = 1.4 * np.random.random() - 0.7 # between -0.7 and 0.7
-				randy = -0.7 * np.random.random() # between 0 and -0.7
-				randtheta = np.random.random() * (2 * np.pi - 0.0001) # between 0 and 2*pi (minus a little to avoid
-				# 2*pi itself
-				random_start_position = np.array((randx, randy, randtheta))
-				print("Heading to a random position at location ", random_start_position)
-				self.head_to_position(random_start_position)
-				print("Reached the start position. Going for the next trial.")
-				self.head_random_start_position = False
-				theta_prev = self.body_pose[2] # need to reset for the controller below
-
-			if not self.replay:
-
-				if self.t - t_last_command > 0.5: # send a command once every second
-					# self.target_theta, _ = self.action_cell_to_theta_and_magnitude(self.action_cell_vals_noise)
-					ac_direction, ac_magnitude = self.action_cell_to_theta_and_magnitude(self.action_cell_vals)
-					if ac_magnitude >= 1:
-						self.target_theta = ac_direction
-						# t_last_command = self.t
-					else:
-						self.target_theta = self.random_walk(theta_prev, self.target_theta)
-					t_last_command = self.t
-
-					# np.savetxt('rates.csv', place_cell_rates_prev, delimiter=',')
-					# np.savetxt('weights.csv', weights_pc_ac_prev, delimiter=',')
-					# np.savetxt('coords.csv', coords_prev, delimiter=',')
-					print("The target angle is: ", self.target_theta / 2 / np.pi * 360)
-					print("The current position is: ", self.body_pose[0:2])
-					print('The max and min values of eligibility trace is: ', np.max(self.elig_trace),
-					      np.min(self.elig_trace))
-					print("The action cell output direction is %.2f rad and maginitude is %.2f"
-					      % (ac_direction, ac_magnitude))
-					print("-------------------------------------------------------------------------------------------")
-
-				self.miro_controller(self.target_theta, theta_prev)
-
-			else:
-				self.stop_movement()
-
-			# TODO ensure it only save the past 1 min of data
-			np.save('data/intrinsic_e_72_acs.npy', self.intrinsic_e)
-			np.save('data/rates_data_72_acs.npy', self.place_cell_rates)
-			np.save('data/place_data_72_acs.npy', self.I_place)
-			np.save('data/action_cells_vals_72_acs.npy', self.action_cell_vals)
-			np.save('data/weights_72_acs.npy', self.weights_pc_ac)
-			np.save('data/eligibility_trace_72_acs.npy', self.elig_trace)
-
-			# self.time_series.append(self.t)
-			# self.rates_series.append(self.place_cell_rates)
-			# self.intrinsic_e_series.append(self.intrinsic_e)
-
-			rate.sleep()
-
-if __name__ == '__main__':
-	robo_replay = RoboReplay()
-	robo_replay.main()

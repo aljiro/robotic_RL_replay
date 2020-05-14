@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 # n = 1.
 # s = 0.99
@@ -103,3 +104,19 @@ import matplotlib.pyplot as plt
 # 		trial_times_file:
 # 	wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
 # 	wr.writerow([1] + [1, 2, 3, 4, 5, 10])
+
+
+x = np.arange(-0.3, 0.3, 0.001)
+y = x.copy()
+X, Y = np.meshgrid(x,y)
+I_p_max = 50
+d = 0.1
+I_place = np.zeros((np.size(x), np.size(y)))
+for i in range(np.size(x)):
+	for j in range(np.size(y)):
+		I_place[i,j] = I_p_max * np.exp(- (x[i]**2 + y[j]**2) / (2 * d**2))
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(X, Y, I_place, vmin=-20, vmax=70, cmap='Blues_r')
+plt.show()

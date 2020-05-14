@@ -34,13 +34,13 @@ cbar.set_label('$\sigma$', rotation=0, labelpad=5)
 def updatefig_live(*args):
 	global plot_rates, plot_intrinsic_es
 	try:
-		rates = np.load('data/rates_data_72_acs.npy', allow_pickle=True)
+		rates = np.load('data/rates_data.npy', allow_pickle=True)
 		if np.size(rates) == 100:
 			plot_rates = np.flip(np.reshape(rates, (10, 10)), 0)
 	except:
 		pass
 	try:
-		intrinsic_es = np.load('data/intrinsic_e_72_acs.npy', allow_pickle=True)
+		intrinsic_es = np.load('data/intrinsic_e.npy', allow_pickle=True)
 		if np.size(intrinsic_es) == 100:
 			plot_intrinsic_es = np.flip(np.reshape(intrinsic_es, (10, 10)), 0)
 	except:
@@ -134,7 +134,7 @@ def updatefig_live_weights_arbitrary(*args):
 		weight_vectors_x_components_arbitrary = np.zeros(number_place_cells)
 		weight_vectors_y_components_arbitrary = np.zeros(number_place_cells)
 		magnitudes = np.zeros(number_place_cells)
-		weights_arbitrary = np.load('data/weights_72_acs.npy', allow_pickle=True)
+		weights_arbitrary = np.load('data/weights.npy', allow_pickle=True)
 		if np.size(weights_arbitrary) == number_place_cells * number_action_cells:
 			angles = np.radians(np.arange(0, 360, 5))
 			for i in range(number_place_cells):
@@ -190,7 +190,7 @@ def updatefig_live_elig_arbitrary(*args):
 		elig_vectors_x_components_arbitrary = np.zeros(number_place_cells)
 		elig_vectors_y_components_arbitrary = np.zeros(number_place_cells)
 		elig_magnitudes = np.zeros(number_place_cells)
-		elig_arbitrary = np.load('data/eligibility_trace_72_acs.npy', allow_pickle=True)
+		elig_arbitrary = np.load('data/eligibility_trace.npy', allow_pickle=True)
 		if np.size(elig_arbitrary) == number_place_cells * number_action_cells:
 			angles = np.radians(np.arange(0, 360, 5))
 			for i in range(number_place_cells):
