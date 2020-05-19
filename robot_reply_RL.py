@@ -373,28 +373,6 @@ class NetworkSetup():
 
 		return self.normalise_weights_pc_ac(weights_updated)
 
-	def weight_updates_for_replay(self, weights_current, reward_pred_error, eta, sigma, action_cells,
-	                                 elig_for_replay, place_cells, delta_t):
-		'''
-		# TODO needs testing
-		:param weights_current: numpy array, 72x100
-		:param reward_pred_error: float
-		:param elig: numpy array, 72x100 of the eligibility trace
-		:param eta: float, learning rate
-		:param sigma: float, standard deviation in the action cell output noise
-		:param delta_t: float, time step
-		:return: numpy array, 72x100 updated values for the weights
-		'''
-
-		weights_updated = weights_current.copy()
-		sigma_squared = sigma**2
-		for i in range(len(weights_current[:, 0])): # iterate through rows, with size of action cells, with index i
-			for j in range(len(weights_current[0, :])): # iterate through columns, 100 of them, with index j
-				weights_updated[i, j] += (eta * reward_pred_error * (1 / sigma_squared) * action_cells[i] *
-				                          (1 - action_cells[i]) * place_cells[j] * elig_for_replay[i, j]) * delta_t
-
-		return self.normalise_weights_pc_ac(weights_updated)
-
 	def normalise_weights_pc_ac(self, weights): # test complete, working well
 		'''
 		normalises the weight matrix between pc cells and action cells
@@ -596,9 +574,9 @@ class NetworkSetup():
 		distance_from_pos = np.sqrt(diff_x ** 2 + diff_y ** 2)
 		while distance_from_pos > 0.02:
 			# wall avoidance
-			if self.sonar_val < 0.03:
-				self.avoid_wall()
-				self.target_theta = self.body_pose[2]
+			#if self.sonar_val < 0.005:
+			#	self.avoid_wall()
+			#	self.target_theta = self.body_pose[2]
 
 			current_pose = self.body_pose.copy()
 			diff_x = target_pose[0] - current_pose[0]
