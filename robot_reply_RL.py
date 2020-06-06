@@ -21,7 +21,7 @@ import miro2 as miro
 
 class NetworkSetup():
 
-	def __init__(self, experiment_number, tau_elig=1, eta=0.05):
+	def __init__(self, tau_elig=1, eta=0.05, experiment_number=1):
 		print("Starting experiment no. " + str(experiment_number) + " with tau_elig = " + str(tau_elig) + " and eta = " +
 		      str(eta))
 
@@ -244,6 +244,7 @@ class NetworkSetup():
 		return rates_update
 
 	def update_currents(self, currents, delta_t, intrinsic_e, weights, rates, stp_d, stp_f, I_inh, I_place, replay=False):
+		I_inh = 0
 		tau_I = 0.05  # s
 		currents_update = np.zeros(self.network_size_pc)
 		g = 0

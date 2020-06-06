@@ -123,6 +123,11 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 				else:
 					I_place = np.zeros(self.network_size_pc)
 
+				# if t_replay == 0.01 or 1.01 > t_replay > 1 or 1.11 > t_replay > 1.1 or 1.21 > t_replay > 1.2 or 1.31 \
+				# 		> t_replay > 1.3 or 1.41 > t_replay > 1.4 or 1.51 > t_replay > 1.5:
+				# 	print(t_replay)
+				# 	np.save('data/eligibility_trace_t_replay=' + str(t_replay) + 's.npy', self.elig_trace)
+
 				# Update variables
 				# Place cells (should initiate a reverse replay)
 				self.currents = self.update_currents(currents_prev, self.delta_t, intrinsic_e_prev,
@@ -200,8 +205,7 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 					#       % (ac_direction, ac_magnitude))
 					# print("-------------------------------------------------------------------------------------------")
 
-				# For testing purposes
-				# self.target_theta = 0
+				self.target_theta = 0 # For testing purposes
 				self.miro_controller(self.target_theta, theta_prev)
 
 			else:
@@ -231,15 +235,13 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 			rate.sleep()
 
 if __name__ == '__main__':
-	# for tau_elig in [1.0/25, 1.0/5, 1.0, 5.0]:
-	for tau_elig in [5.0]:
-		# for eta in [0.01, 0.1, 1.0, 10.0]:
-		for eta in [0.01, 0.1, 1.0, 10.0]:
-			with open('data/trial_times/trial_times_WITH_REPLAY_FULL.csv', 'a') as trial_times_file:
-				wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
-				wr.writerow("")
-				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
+	for tau_elig in [0.2]:
+		for eta in [10]:
+			# with open('data/trial_times/trial_times_WITH_REPLAY_FULL.csv', 'a') as trial_times_file:
+			# 	wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
+			# 	wr.writerow("")
+			# 	wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
 
 			for experiment in range(1, 21):
-				robo_replay = RobotReplayMain(experiment, tau_elig, eta)
+				robo_replay = RobotReplayMain(tau_elig, eta, experiment)
 				robo_replay.main()

@@ -29,7 +29,7 @@ class RewardFunction:
 		reward_location = np.random.randint(2, 7, (2))  # reward location is located at one of the place cell
 		# locations, but only in the inner 8 rows and columns
 		self.reward_location_xy = reward_location / 5.0 - 1
-		self.reward_location_xy = np.array(([0., 0.6]))  # for testing
+		self.reward_location_xy = np.array(([0.0, 0.6]))  # for testing
 		self.reward = 0
 		print("Reward generated at the location " + str((round(self.reward_location_xy[0],1), self.reward_location_xy[
 			1])))

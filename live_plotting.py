@@ -173,7 +173,7 @@ x_coords = np.arange(10) / 5 - 0.9
 y_coords = np.flip(np.arange(10) / 5 - 0.9)
 x, y = np.meshgrid(x_coords, y_coords)
 im_elig_arbitrary = ax_elig_arbitrary.quiver(x, y, elig_vectors_x_components_arbitrary,
-                                                   elig_vectors_y_components_arbitrary, EE, scale=20, clim=(0, 3))
+                                                   elig_vectors_y_components_arbitrary, EE, scale=20, clim=(0, 0.5))
 cbar_elig = fig_elig_arbitrary.colorbar(im_elig_arbitrary, ax=ax_elig_arbitrary)
 # im_weights_arbitrary.set_clim(0, 1)
 
