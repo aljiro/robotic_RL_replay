@@ -161,6 +161,15 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 					theta_prev = self.body_pose[2] # resets
 
 			############################################################################################################
+
+			# If t_trial > 120s, then MiRo has been searching too long. Start a new trial.
+			if t_trial > 120:
+				self.intrinsic_e = self.intrinsic_e_reset.copy()
+				self.elig_trace = np.zeros((self.network_size_ac, self.network_size_pc))
+				trial_times.append(120)
+				t_trial = 0
+				self.head_random_start_position = True
+
 			# Miro controller
 			if self.heading_home:
 				print("Heading home...")
@@ -205,7 +214,7 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 					#       % (ac_direction, ac_magnitude))
 					# print("-------------------------------------------------------------------------------------------")
 
-				self.target_theta = 0 # For testing purposes
+				# self.target_theta = 0 # For testing purposes
 				self.miro_controller(self.target_theta, theta_prev)
 
 			else:
@@ -235,13 +244,13 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 			rate.sleep()
 
 if __name__ == '__main__':
-	for tau_elig in [0.2]:
-		for eta in [10]:
-			# with open('data/trial_times/trial_times_WITH_REPLAY_FULL.csv', 'a') as trial_times_file:
-			# 	wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
-			# 	wr.writerow("")
-			# 	wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
+	for tau_elig in [1.0]:
+		for eta in [1, 10]:
+			with open('data/trial_times/trial_times_WITH_REPLAY_FULL.csv', 'a') as trial_times_file:
+				wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
+				wr.writerow("")
+				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
 
-			for experiment in range(1, 21):
+			for experiment in range(1, 41):
 				robo_replay = RobotReplayMain(tau_elig, eta, experiment)
 				robo_replay.main()

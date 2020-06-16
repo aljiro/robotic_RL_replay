@@ -235,6 +235,15 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 					theta_prev = self.body_pose[2] # resets
 
 			############################################################################################################
+
+			# If t_trial > 120s, then MiRo has been searching too long. Start a new trial.
+			if t_trial > 120:
+				self.intrinsic_e = self.intrinsic_e_reset.copy()
+				self.elig_trace = np.zeros(self.network_size_ac)
+				trial_times.append(120)
+				t_trial = 0
+				self.head_random_start_position = True
+
 			# Miro controller
 			if self.heading_home:
 				print("Heading home...")
