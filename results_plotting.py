@@ -8,97 +8,126 @@ import csv
 import copy
 
 # Storing the raw data
-result_parameters = {'tau=0.04_eta=0.01': [],
-                          'tau=0.04_eta=0.1': [],
-                          'tau=0.04_eta=1': [],
-                          'tau=0.04_eta=10': [],
-                          'tau=0.2_eta=0.01': [],
-                          'tau=0.2_eta=0.1': [],
-                          'tau=0.2_eta=1': [],
-                          'tau=0.2_eta=10': [],
-                          'tau=1_eta=0.001': [],
-                          'tau=1_eta=0.002': [],
-                          'tau=1_eta=0.005': [],
-                          'tau=1_eta=0.01': [],
-                          'tau=1_eta=0.1': [],
-                          'tau=1_eta=1': [],
-                          'tau=5_eta=0.01': [],
-                          'tau=5_eta=0.1': [],}
+result_parameters = {'tau=0.04_eta=0.001': [],
+	'tau=0.04_eta=0.01': [],
+    'tau=0.04_eta=0.1': [],
+    'tau=0.04_eta=1': [],
+    'tau=0.04_eta=10': [],
+	'tau=0.2_eta=0.001': [],
+    'tau=0.2_eta=0.01': [],
+    'tau=0.2_eta=0.1': [],
+    'tau=0.2_eta=1': [],
+    'tau=0.2_eta=10': [],
+    'tau=1_eta=0.001': [],
+    'tau=1_eta=0.002': [],
+    'tau=1_eta=0.005': [],
+    'tau=1_eta=0.01': [],
+    'tau=1_eta=0.1': [],
+    'tau=1_eta=1': [],
+    'tau=1_eta=10': [],
+    'tau=5_eta=0.001': [],
+    'tau=5_eta=0.01': [],
+    'tau=5_eta=0.1': [],
+    'tau=5_eta=1': [],
+    'tau=5_eta=10': [],}
 
 results_full_nonreplay = copy.deepcopy(result_parameters)
 results_full_replay = copy.deepcopy(result_parameters)
 
-with open('data/trial_times/trial_times_NON_REPLAY_FULL.csv', newline='') as file:
+with open('data/trial_times/trial_times_NON_REPLAY_plot.csv', newline='') as file:
 	data = csv.reader(file, delimiter=',')
+	step = 42
 	for i, row in enumerate(data):
-		if (2 <= i < 42):
+		if (2 <= i < step):
+			results_full_nonreplay['tau=0.04_eta=0.001'].append([float(j) for j in row[1:]])
+		if (step + 2 <= i < 2 * step):
 			results_full_nonreplay['tau=0.04_eta=0.01'].append([float(j) for j in row[1:]])
-		if (44 <= i < 84):
+		if (2 * step + 2 <= i < 3 * step):
 			results_full_nonreplay['tau=0.04_eta=0.1'].append([float(j) for j in row[1:]])
-		if (86 <= i < 126):
+		if (3 * step + 2 <= i < 4 * step):
 			results_full_nonreplay['tau=0.04_eta=1'].append([float(j) for j in row[1:]])
-		if (128 <= i < 168):
+		if (4 * step + 2 <= i < 5 * step):
 			results_full_nonreplay['tau=0.04_eta=10'].append([float(j) for j in row[1:]])
-		if (170 <= i < 210):
-			results_full_nonreplay['tau=0.2_eta=0.01'].append([float(j) for j in row[1:]])
-		if (212 <= i < 252):
-			results_full_nonreplay['tau=0.2_eta=0.1'].append([float(j) for j in row[1:]])
-		if (254 <= i < 294):
-			results_full_nonreplay['tau=0.2_eta=1'].append([float(j) for j in row[1:]])
-		if (296 <= i < 336):
-			results_full_nonreplay['tau=0.2_eta=10'].append([float(j) for j in row[1:]])
-		if (338 <= i < 358):
-			results_full_nonreplay['tau=1_eta=0.01'].append([float(j) for j in row[1:]])
-		if (360 <= i < 380):
-			results_full_nonreplay['tau=1_eta=0.1'].append([float(j) for j in row[1:]])
-		if (382 <= i < 402):
-			results_full_nonreplay['tau=1_eta=1'].append([float(j) for j in row[1:]])
-		if (404 <= i < 424):
-			results_full_nonreplay['tau=5_eta=0.01'].append([float(j) for j in row[1:]])
-		if (426 <= i < 446):
-			results_full_nonreplay['tau=5_eta=0.1'].append([float(j) for j in row[1:]])
-		if (448 <= i < 468):
-			results_full_nonreplay['tau=1_eta=0.005'].append([float(j) for j in row[1:]])
-		if (470 <= i < 490):
-			results_full_nonreplay['tau=1_eta=0.002'].append([float(j) for j in row[1:]])
-		if (492 <= i < 512):
-			results_full_nonreplay['tau=1_eta=0.001'].append([float(j) for j in row[1:]])
 
-with open('data/trial_times/trial_times_WITH_REPLAY_FULL.csv', newline='') as file:
+		if (5 * step + 2 <= i < 6 * step):
+			results_full_nonreplay['tau=0.2_eta=0.001'].append([float(j) for j in row[1:]])
+		if (6 * step + 2 <= i < 7 * step):
+			results_full_nonreplay['tau=0.2_eta=0.01'].append([float(j) for j in row[1:]])
+		if (7 * step + 2 <= i < 8 * step):
+			results_full_nonreplay['tau=0.2_eta=0.1'].append([float(j) for j in row[1:]])
+		if (8 * step + 2 <= i < 9 * step):
+			results_full_nonreplay['tau=0.2_eta=1'].append([float(j) for j in row[1:]])
+		if (9 * step + 2 <= i < 10 * step):
+			results_full_nonreplay['tau=0.2_eta=10'].append([float(j) for j in row[1:]])
+
+		if (10 * step + 2 <= i < 11 * step):
+			results_full_nonreplay['tau=1_eta=0.001'].append([float(j) for j in row[1:]])
+		if (11 * step + 2 <= i < 12 * step):
+			results_full_nonreplay['tau=1_eta=0.01'].append([float(j) for j in row[1:]])
+		if (12 * step + 2 <= i < 13 * step):
+			results_full_nonreplay['tau=1_eta=0.1'].append([float(j) for j in row[1:]])
+		if (13 * step + 2 <= i < 14 * step):
+			results_full_nonreplay['tau=1_eta=1'].append([float(j) for j in row[1:]])
+		if (14 * step + 2 <= i < 15 * step):
+			results_full_nonreplay['tau=1_eta=10'].append([float(j) for j in row[1:]])
+
+		if (15 * step + 2 <= i < 16 * step):
+			results_full_nonreplay['tau=5_eta=0.001'].append([float(j) for j in row[1:]])
+		if (16 * step + 2 <= i < 17 * step):
+			results_full_nonreplay['tau=5_eta=0.01'].append([float(j) for j in row[1:]])
+		if (17 * step + 2 <= i < 18 * step):
+			results_full_nonreplay['tau=5_eta=0.1'].append([float(j) for j in row[1:]])
+		if (18 * step + 2 <= i < 19 * step):
+			results_full_nonreplay['tau=5_eta=1'].append([float(j) for j in row[1:]])
+		if (19 * step + 2 <= i < 20 * step):
+			results_full_nonreplay['tau=5_eta=10'].append([float(j) for j in row[1:]])
+
+with open('data/trial_times/trial_times_WITH_REPLAY_plot.csv', newline='') as file:
 	data = csv.reader(file, delimiter=',')
 	for i, row in enumerate(data):
-		if (2 <= i < 42):
+		if (2 <= i < step):
+			results_full_replay['tau=0.04_eta=0.001'].append([float(j) for j in row[1:]])
+		if (step + 2 <= i < 2 * step):
 			results_full_replay['tau=0.04_eta=0.01'].append([float(j) for j in row[1:]])
-		if (44 <= i < 84):
+		if (2 * step + 2 <= i < 3 * step):
 			results_full_replay['tau=0.04_eta=0.1'].append([float(j) for j in row[1:]])
-		if (86 <= i < 126):
+		if (3 * step + 2 <= i < 4 * step):
 			results_full_replay['tau=0.04_eta=1'].append([float(j) for j in row[1:]])
-		if (128 <= i < 168):
+		if (4 * step + 2 <= i < 5 * step):
 			results_full_replay['tau=0.04_eta=10'].append([float(j) for j in row[1:]])
-		if (170 <= i < 210):
+
+		if (5 * step + 2 <= i < 6 * step):
+			results_full_replay['tau=0.2_eta=0.001'].append([float(j) for j in row[1:]])
+		if (6 * step + 2 <= i < 7 * step):
 			results_full_replay['tau=0.2_eta=0.01'].append([float(j) for j in row[1:]])
-		if (212 <= i < 252):
+		if (7 * step + 2 <= i < 8 * step):
 			results_full_replay['tau=0.2_eta=0.1'].append([float(j) for j in row[1:]])
-		if (254 <= i < 294):
+		if (8 * step + 2 <= i < 9 * step):
 			results_full_replay['tau=0.2_eta=1'].append([float(j) for j in row[1:]])
-		if (296 <= i < 336):
+		if (9 * step + 2 <= i < 10 * step):
 			results_full_replay['tau=0.2_eta=10'].append([float(j) for j in row[1:]])
-		if (338 <= i < 358):
-			results_full_replay['tau=1_eta=0.01'].append([float(j) for j in row[1:]])
-		if (360 <= i < 380):
-			results_full_replay['tau=1_eta=0.1'].append([float(j) for j in row[1:]])
-		if (382 <= i < 402):
-			results_full_replay['tau=1_eta=1'].append([float(j) for j in row[1:]])
-		if (404 <= i < 424):
-			results_full_replay['tau=5_eta=0.01'].append([float(j) for j in row[1:]])
-		if (426 <= i < 446):
-			results_full_replay['tau=5_eta=0.1'].append([float(j) for j in row[1:]])
-		if (448 <= i < 468):
-			results_full_replay['tau=1_eta=0.005'].append([float(j) for j in row[1:]])
-		if (470 <= i < 490):
-			results_full_replay['tau=1_eta=0.002'].append([float(j) for j in row[1:]])
-		if (492 <= i < 512):
+
+		if (10 * step + 2 <= i < 11 * step):
 			results_full_replay['tau=1_eta=0.001'].append([float(j) for j in row[1:]])
+		if (11 * step + 2 <= i < 12 * step):
+			results_full_replay['tau=1_eta=0.01'].append([float(j) for j in row[1:]])
+		if (12 * step + 2 <= i < 13 * step):
+			results_full_replay['tau=1_eta=0.1'].append([float(j) for j in row[1:]])
+		if (13 * step + 2 <= i < 14 * step):
+			results_full_replay['tau=1_eta=1'].append([float(j) for j in row[1:]])
+		if (14 * step + 2 <= i < 15 * step):
+			results_full_replay['tau=1_eta=10'].append([float(j) for j in row[1:]])
+
+		if (15 * step + 2 <= i < 16 * step):
+			results_full_replay['tau=5_eta=0.001'].append([float(j) for j in row[1:]])
+		if (16 * step + 2 <= i < 17 * step):
+			results_full_replay['tau=5_eta=0.01'].append([float(j) for j in row[1:]])
+		if (17 * step + 2 <= i < 18 * step):
+			results_full_replay['tau=5_eta=0.1'].append([float(j) for j in row[1:]])
+		if (18 * step + 2 <= i < 19 * step):
+			results_full_replay['tau=5_eta=1'].append([float(j) for j in row[1:]])
+		if (19 * step + 2 <= i < 20 * step):
+			results_full_replay['tau=5_eta=10'].append([float(j) for j in row[1:]])
 
 # Getting the averages and standard deviations for each
 averages_nonreplay = copy.deepcopy(result_parameters)
@@ -139,54 +168,122 @@ for key in averages_replay:
 		std_dev_replay[key].append(standard_dev)
 
 #######################################################
+# Function for generating a moving average
+def generate_moving_average_data(tau_e, eta):
+	'''
+
+	:param tau_e: string
+	:param eta: string
+	:return: numpy array, moving average data
+	'''
+	time_const = 'tau=' + tau_e + '_'
+	eta = 'eta=' + eta
+	# calculate moving averages
+	moving_average_nonreplay = np.zeros(20)
+	moving_average_replay = np.zeros(20)
+	moving_average_std_devs_nonreplay = np.zeros(20)
+	moving_average_std_devs_replay = np.zeros(20)
+
+	for i in range(20):
+		if i == 0:
+			moving_average_nonreplay[i] = averages_nonreplay[time_const + eta][i] + \
+			                              averages_nonreplay[time_const + eta][i
+			                                                                   + 1]
+			moving_average_nonreplay[i] /= 2
+			moving_average_std_devs_nonreplay[i] = std_dev_nonreplay[time_const + eta][i] + \
+			                                       std_dev_nonreplay[time_const +
+			                                                         eta][i + 1]
+			moving_average_std_devs_nonreplay[i] /= 2
+
+			moving_average_replay[i] = averages_replay[time_const + eta][i] + averages_replay[time_const + eta][i + 1]
+			moving_average_replay[i] /= 2
+			moving_average_std_devs_replay[i] = std_dev_replay[time_const + eta][i] + std_dev_replay[time_const + eta][
+				i + 1]
+			moving_average_std_devs_replay[i] /= 2
+		elif i == 19:
+			moving_average_nonreplay[i] = averages_nonreplay[time_const + eta][i] + \
+			                              averages_nonreplay[time_const + eta][i
+			                                                                   - 1]
+			moving_average_nonreplay[i] /= 2
+			moving_average_std_devs_nonreplay[i] = std_dev_nonreplay[time_const + eta][i] + \
+			                                       std_dev_nonreplay[time_const +
+			                                                         eta][i - 1]
+			moving_average_std_devs_nonreplay[i] /= 2
+
+			moving_average_replay[i] = averages_replay[time_const + eta][i] + averages_replay[time_const + eta][i - 1]
+			moving_average_replay[i] /= 2
+			moving_average_std_devs_replay[i] = std_dev_replay[time_const + eta][i] + std_dev_replay[time_const + eta][
+				i - 1]
+			moving_average_std_devs_replay[i] /= 2
+		else:
+			moving_average_nonreplay[i] = averages_nonreplay[time_const + eta][i] + \
+			                              averages_nonreplay[time_const + eta][
+				                              i - 1] + averages_nonreplay[time_const + eta][i + 1]
+			moving_average_nonreplay[i] /= 3
+			moving_average_std_devs_nonreplay[i] = std_dev_nonreplay[time_const + eta][i] + \
+			                                       std_dev_nonreplay[time_const +
+			                                                         eta][i - 1] + std_dev_nonreplay[time_const + eta][
+				                                       i + 1]
+			moving_average_std_devs_nonreplay[i] /= 3
+
+			moving_average_replay[i] = averages_replay[time_const + eta][i] + averages_replay[time_const + eta][i - 1] + \
+			                           averages_replay[time_const + eta][i + 1]
+			moving_average_replay[i] /= 3
+			moving_average_std_devs_replay[i] = std_dev_replay[time_const + eta][i] + std_dev_replay[time_const + eta][
+				i - 1] + \
+			                                    std_dev_replay[time_const + eta][i + 1]
+			moving_average_std_devs_replay[i] /= 3
+
+	return moving_average_replay, moving_average_nonreplay, moving_average_std_devs_replay, moving_average_std_devs_nonreplay
+
+
+
+#######################################################
 # Plotting the non-replay best case
-parameters = 'tau=1_eta=0.01'
+tau_e = '1'
+eta = '0.01'
 fig, ax = plt.subplots(1,1)
-ax.set_title('Non-replay case, ' + parameters)
-ax.plot(np.arange(1, 21), averages_nonreplay[parameters], color='red', label='$\\tau_e = 1s$ \n $\eta = '
+ax.set_title('Non-replay case, ' + '$\\tau_e =$ ' + tau_e + '$, \eta =$ ' + eta)
+_, average_data_moving, _, std_dev_moving = generate_moving_average_data(tau_e, eta)
+ax.plot(np.arange(1, 21), average_data_moving, color='red', label='$\\tau_e = 1s$ \n $\eta = '
                                                                              '0.01$')
 ax.set_ylim(0,60)
 ax.set_xlim(1, 20)
 ax.set_xticks(np.arange(1,21))
-ax.fill_between(np.arange(1, 21), np.array(averages_nonreplay[parameters]) -
-                       np.array(std_dev_nonreplay[parameters]),
-                       np.array(averages_nonreplay[parameters]) + np.array(std_dev_nonreplay[
-	                                                                                   parameters]),
+ax.fill_between(np.arange(1, 21), average_data_moving - std_dev_moving, average_data_moving + std_dev_moving,
                        alpha=0.2, color='red')
 ax.set_ylabel('Time (s)', fontsize=14)
 ax.set_xlabel('Trial no.', fontsize=14)
 ax.legend()
-fig.savefig('figs/Non_replay_case_' + parameters + '.png')
+fig.savefig('figs/Non_replay_case_' + 'tau=' + tau_e + '_eta=' + eta + '.png')
 
 #######################################################
-# Plotting the replay case using the same eligibility trace time constant as above but with eta=0.005 and eta=0.01
+# Plotting the best cases for replay and non-replay
+#replay
 fig, ax = plt.subplots(1,1)
-ax.set_title('Replay case, $\\tau_e = 1s$')
+tau_e = '0.04'
+eta = '1'
+ax.set_title('Replay versus non-replay')
+average_data_moving, _, std_dev_moving, _ = generate_moving_average_data(tau_e, eta)
+ax.plot(np.arange(1, 21), average_data_moving, label='With Replay')
+ax.fill_between(np.arange(1, 21), average_data_moving - std_dev_moving, average_data_moving + std_dev_moving,
+                       alpha=0.4)
 
-ax.set_ylim(0,40)
+#nonreplay
+tau_e = '1'
+eta = '0.01'
+_, average_data_moving, _, std_dev_moving = generate_moving_average_data(tau_e, eta)
+ax.plot(np.arange(1, 21), average_data_moving, label='Without Replay')
+ax.fill_between(np.arange(1, 21), average_data_moving - std_dev_moving, average_data_moving + std_dev_moving,
+                       alpha=0.2)
+
+ax.set_ylim(0,60)
 ax.set_xlim(1, 20)
 ax.set_xticks(np.arange(1,21))
-
-parameters = 'tau=1_eta=0.01'
-ax.plot(np.arange(1, 21), averages_replay[parameters], color='black', label='$\eta = 0.01$')
-ax.fill_between(np.arange(1, 21), np.array(averages_replay[parameters]) -
-                       np.array(std_dev_replay[parameters]),
-                       np.array(averages_replay[parameters]) + np.array(std_dev_replay[
-	                                                                                   parameters]),
-                       alpha=0.2, color='black')
-
-parameters = 'tau=1_eta=0.005'
-ax.plot(np.arange(1, 21), averages_replay[parameters], color='blue', label='$\eta = 0.005$')
-ax.fill_between(np.arange(1, 21), np.array(averages_replay[parameters]) -
-                       np.array(std_dev_replay[parameters]),
-                       np.array(averages_replay[parameters]) + np.array(std_dev_replay[
-	                                                                                   parameters]),
-                       alpha=0.2, color='blue')
-
-ax.legend()
 ax.set_ylabel('Time (s)', fontsize=14)
 ax.set_xlabel('Trial no.', fontsize=14)
-fig.savefig('figs/replay_case_comparison_of_learning_rate.png')
+ax.legend()
+fig.savefig('figs/replay_vs_nonreplay_best_cases.png')
 
 # ########################################################
 # Plotting replay vs non-replay for tau_e=1s and eta=0.002

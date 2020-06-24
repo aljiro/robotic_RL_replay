@@ -448,13 +448,13 @@ class NetworkSetup():
 		target_theta = np.degrees(theta)  # Convert radians into degrees
 		action_cells = np.zeros((self.network_size_ac))
 		action_cells_centres = np.arange(0, 360, int(360 / self.network_size_ac))
-		sigma = 10
+		theta_d = 10
 		a = 1
 		for i in range(self.network_size_ac):
 			diff = float(abs(target_theta - action_cells_centres[i]))
 			if diff > 180:  # to account for the discontinuity between 0 degs and 360 degs
 				diff = 360 - diff
-			action_cells[i] = a * np.exp(-(diff) ** 2 / sigma ** 2)
+			action_cells[i] = a * np.exp(-(diff) ** 2 / theta_d ** 2)
 
 		return action_cells
 
