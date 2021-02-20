@@ -1,122 +1,47 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
-# n = 1.
-# s = 0.99
-# w = 0.0001
-# e = 0.
+# i_j = np.arange(-20,21,1)
+# d = 5
+# w_max = 27
+# weights = w_max * np.exp(-np.abs(i_j)/d)
+# weights[20] = 0
 #
-# n_s = n - s
-# e_w = e - w
-# n_s_norm = n_s / np.sqrt(n_s**2 + e_w**2)
-# e_w_norm = e_w / np.sqrt(n_s**2 + e_w**2)
-#
-# theta_tan = np.arctan(n_s / e_w)
-# theta_sin = np.arcsin(n_s_norm)
-# theta_cos = np.arccos(e_w_norm)
-# if e_w > 0.:
-# 	if theta_tan < 0.:
-# 		theta_proper_tan = 2. * np.pi - theta_tan
-# 	else:
-# 		theta_proper_tan = theta_tan
-# else:
-# 	theta_proper_tan = np.pi + theta_tan
-#
-# print(theta_tan, theta_sin, theta_cos, theta_proper_tan)
-
-# y = np.arange(0, 1, 0.01)
-# de_dt = (1 - y) * y
-#
-# plt.plot(y, de_dt)
+# plt.figure(figsize=(5,2.5))
+# plt.plot(i_j, weights)
+# plt.xticks(np.arange(-20, 21, 5))
+# plt.xlim((-20,20))
+# plt.ylim((0,25))
+# plt.xlabel('$i-j$')
+# plt.ylabel('$w_{ij}$')
+# plt.savefig('weights_initial',bbox_inches='tight')
 # plt.show()
 
-# testing sigmoids
-# inputs = np.arange(0, 100)
-# c1 = 0.1
-# c2 = 20
-# outputs = 1 / (1 + np.exp(-c1 * (inputs - c2)))
-# plt.plot(inputs, outputs)
-# plt.show()
+d = 1
+f = 0.6
+U = 0.6
+tau_stf = 200
+tau_std = 500
+r = 40
+delta_t = 10
 
+time_plot = [0]
+f_plot = [f]
+d_plot = [d]
+fd_plot = [f * d]
+for t_step in range(1000):
+	d_next = ((1 - d) / tau_std - r*d*f) * delta_t
+	f_next = ((U - f) / tau_stf + U * (1 - f) * r) * delta_t
+	time_plot.append(t_step * delta_t)
+	f_plot.append(f_next)
+	d_plot.append(d_next)
+	print(d_next)
+	fd_plot.append((d_next * f_next))
+	d = d_next
+	f = f_next
+	print(t_step / 10)
 
-# def compute_place_cell_activities(coord_x, coord_y, reward, movement=False):
-# 	'''
-#
-# 	:param coord_x: float, the x coordinate (m)
-# 	:param coord_y: float, the y coordinate (m)
-# 	:param reward: float, the reward value. If reward != 0, the agent should be resting and the C parameter set
-# 	to 1 Hz
-# 	:param movement: bool, indicates whether the robot moved in the current time step or not
-# 	:return: numpy array, vector of the networks place cell activities
-# 	'''
-#
-# 	d = 0.1  # m
-# 	network_size_pc = 100
-# 	no_cells_per_m = np.sqrt(network_size_pc) / 2  # 5
-# 	no_cell_it = int(np.sqrt(network_size_pc))  # 10, the number of cells along one row of the network
-# 	if movement or reward != 0:
-# 		C = 50  # Hz
-# 	else:
-# 		C = 0  # Hz
-# 	cells_activity = np.zeros((no_cell_it, no_cell_it))
-# 	place = np.array((coord_x, coord_y))
-# 	for x in range(no_cell_it):
-# 		for y in range(no_cell_it):
-# 			place_cell_field_location = np.array(((float(x) / 5) - 0.9, (-float(y) / 5) + 0.9))
-# 			cells_activity[y, x] = C * np.exp(
-# 				-1.0 / (2.0 * d ** 2.0) * np.dot((place - place_cell_field_location),
-# 				                                 (place - place_cell_field_location)))
-# 	cell_activities_array = cells_activity.flatten()
-# 	return cell_activities_array
-#
-# coord_x = -0.3
-# coord_y = 0.7
-#
-# test_output = compute_place_cell_activities(coord_x, coord_y, 0, True)
-# # print(test_output)
-#
-# for x in range(10):
-# 	print((float(x) / 5) - 0.9)
-
-# sigma = 10
-# degs = np.arange(0, 360, 5)
-# centre = 184.5
-# a = 1
-# ac_output = np.zeros(72)
-# for i in range(72):
-# 	diff = float(abs(centre - degs[i]))
-# 	if diff > 180:
-# 		diff = 360 - diff
-# 	ac_output[i] = a * np.exp(-(diff) ** 2 / sigma ** 2)
-# plt.plot(degs, ac_output)
-# plt.show()
-
-
-
-
-
-# acs = theta_to_action_cell(np.radians(0))
-# theta = np.degrees(action_cell_to_theta(acs))
-#
-# import csv
-# with open('data/trial_times_WITH_REPLAY.csv', 'a') as \
-# 		trial_times_file:
-# 	wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
-# 	wr.writerow([1] + [1, 2, 3, 4, 5, 10])
-
-
-x = np.arange(-0.3, 0.3, 0.001)
-y = x.copy()
-X, Y = np.meshgrid(x,y)
-I_p_max = 50
-d = 0.1
-I_place = np.zeros((np.size(x), np.size(y)))
-for i in range(np.size(x)):
-	for j in range(np.size(y)):
-		I_place[i,j] = I_p_max * np.exp(- (x[i]**2 + y[j]**2) / (2 * d**2))
-
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.plot_surface(X, Y, I_place, vmin=-20, vmax=70, cmap='Blues_r')
+plt.plot(time_plot, f_plot)
+plt.plot(time_plot, d_plot)
+plt.plot(time_plot, fd_plot)
 plt.show()

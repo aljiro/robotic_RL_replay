@@ -24,6 +24,18 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 	# Inherits the methods from the NetworkSetup class in the main "robot_replay_RL" module. That provides all the
 	# methods for network setup and dynamics. See class for a full list of variable names and methods.
 
+	def signal_handler(self, sig, frame): # handles tasks for when closing the program with ctrl+c
+		print('\nSaving trial data')
+		np.save('data/time_series_without_inh.npy', self.time_series)
+		np.save('data/rates_series_without_inh.npy', self.rates_series)
+		np.save('data/intrinsic_e_series_without_inh.npy', self.intrinsic_e_series)
+
+		# clean up the temporary data files
+		os.remove('data/intrinsic_e.npy')
+		os.remove('data/rates_data.npy')
+		os.remove('data/place_data.npy')
+
+		sys.exit(0)
 ########################################################################################################################
 # The main portion of the program that starts the ROS loop, runs the MiRo controller and updates all the model variables
 	def main(self):
@@ -109,7 +121,8 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 							if elig_trace_prev[i, j] > 0:
 								elig_trace_at_reward[i, j] = 0.1
 							elif elig_trace_prev[i, j] < 0:
-								elig_trace_at_reward[i, j] = -0.1
+								# elig_trace_at_reward[i, j] = -0.1
+								elig_trace_at_reward[i, j] = 0
 
 					if t_trial != 0 and t_trial > 1:
 						trial_times.append(t_trial)
@@ -244,13 +257,14 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 			rate.sleep()
 
 if __name__ == '__main__':
-	for tau_elig in [1.0]:
-		for eta in [0.002, 0.005]:
+	no_trials = 30
+	for tau_elig in [0.04, 0.2]:
+		for eta in [0.1, 1]:
 			with open('data/trial_times/trial_times_WITH_REPLAY_FULL.csv', 'a') as trial_times_file:
 				wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
 				wr.writerow("")
 				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
 
-			for experiment in range(1, 21):
-				robo_replay = RobotReplayMain(tau_elig, eta, experiment)
+			for experiment in range(1, 41):
+				robo_replay = RobotReplayMain(tau_elig, eta, no_trials, experiment)
 				robo_replay.main()

@@ -458,6 +458,33 @@ def produce_plots(list_tau_e, list_eta, comparison='eta', plt_show=False):
 		if plt_show == True:
 			plt.show()
 
+def compute_cv(tau, eta, case):
+	'''
+	Computes the average coefficient of variation for the last 10 trials for a given set of parameters
+	:param tau:
+	:param eta:
+	:param case:
+	:return:
+	'''
+	parameters = 'tau=' + str(tau) + '_eta=' + str(eta)
+	cov_list = []
+	if case == 'replay':
+		for i in range(10, 20):
+			avg = averages_replay[parameters][i]
+			dev = std_dev_replay[parameters][i]
+			cv = dev / avg
+			cov_list.append(cv)
+			# print(avg, dev)
+	elif case == 'nonreplay':
+		for i in range(10, 20):
+			avg = averages_nonreplay[parameters][i]
+			dev = std_dev_nonreplay[parameters][i]
+			cv = dev / avg
+			cov_list.append(cv)
+			# print(avg, dev)
+
+	return np.average(cov_list), cov_list
+
 ###############################################################################
 # # Plots for tau_e = 0.04s
 # tau_e = '0.04'
@@ -488,57 +515,57 @@ def produce_plots(list_tau_e, list_eta, comparison='eta', plt_show=False):
 # eta = '0.001'
 # produce_plots(list_tau_e, eta, comparison='tau', plt_show=True)
 
-###############################################################################
-# Producing the bar charts
-# setup the figure and axes
+##############################################################################
+# # Producing the bar charts
+#
+# parameters = ['tau=0.04_eta=0.001',
+# 	'tau=0.2_eta=0.001',
+# 	'tau=1_eta=0.001',
+# 	'tau=5_eta=0.001',
+# 	'tau=0.04_eta=0.01',
+# 	'tau=0.2_eta=0.01',
+# 	'tau=1_eta=0.01',
+# 	'tau=5_eta=0.01',
+# 	'tau=0.04_eta=0.1',
+# 	'tau=0.2_eta=0.1',
+# 	'tau=1_eta=0.1',
+# 	'tau=5_eta=0.1',
+#     'tau=0.04_eta=1',
+# 	'tau=0.2_eta=1',
+# 	'tau=1_eta=1',
+# 	'tau=5_eta=1',
+#     'tau=0.04_eta=10',
+#     'tau=0.2_eta=10',
+#     'tau=1_eta=10',
+#     'tau=5_eta=10']
+#
+# number_parameters = 20
+# ten_trial_average_replay = np.zeros(number_parameters)
+# ten_trial_average_dev_replay = np.zeros(number_parameters)
+# ten_trial_average_nonreplay = np.zeros(number_parameters)
+# ten_trial_average_dev_nonreplay = np.zeros(number_parameters)
+#
+# for j, key in enumerate(parameters):
+# 	# print(i, key)
+# 	average_replay = 0
+# 	average_dev_replay = 0
+# 	average_nonreplay = 0
+# 	average_dev_nonreplay = 0
+# 	for i in range(10):
+# 		average_replay += averages_replay[key][10 + i]
+# 		average_dev_replay += std_dev_replay[key][10 + i]
+# 		average_nonreplay += averages_nonreplay[key][10 + i]
+# 		average_dev_nonreplay += std_dev_nonreplay[key][10 + i]
+# 	average_replay /= 10
+# 	average_dev_replay /= 10
+# 	average_nonreplay /= 10
+# 	average_dev_nonreplay /= 10
+# 	ten_trial_average_replay[j] = average_replay
+# 	ten_trial_average_dev_replay[j] = average_dev_replay
+# 	ten_trial_average_nonreplay[j] = average_nonreplay
+# 	ten_trial_average_dev_nonreplay[j] = average_dev_nonreplay
 
-parameters = ['tau=0.04_eta=0.001',
-	'tau=0.2_eta=0.001',
-	'tau=1_eta=0.001',
-	'tau=5_eta=0.001',
-	'tau=0.04_eta=0.01',
-	'tau=0.2_eta=0.01',
-	'tau=1_eta=0.01',
-	'tau=5_eta=0.01',
-	'tau=0.04_eta=0.1',
-	'tau=0.2_eta=0.1',
-	'tau=1_eta=0.1',
-	'tau=5_eta=0.1',
-    'tau=0.04_eta=1',
-	'tau=0.2_eta=1',
-	'tau=1_eta=1',
-	'tau=5_eta=1',
-    'tau=0.04_eta=10',
-    'tau=0.2_eta=10',
-    'tau=1_eta=10',
-    'tau=5_eta=10']
-
-number_parameters = 20
-ten_trial_average_replay = np.zeros(number_parameters)
-ten_trial_average_dev_replay = np.zeros(number_parameters)
-ten_trial_average_nonreplay = np.zeros(number_parameters)
-ten_trial_average_dev_nonreplay = np.zeros(number_parameters)
-
-for j, key in enumerate(parameters):
-	# print(i, key)
-	average_replay = 0
-	average_dev_replay = 0
-	average_nonreplay = 0
-	average_dev_nonreplay = 0
-	for i in range(10):
-		average_replay += averages_replay[key][10 + i]
-		average_dev_replay += std_dev_replay[key][10 + i]
-		average_nonreplay += averages_nonreplay[key][10 + i]
-		average_dev_nonreplay += std_dev_nonreplay[key][10 + i]
-	average_replay /= 10
-	average_dev_replay /= 10
-	average_nonreplay /= 10
-	average_dev_nonreplay /= 10
-	ten_trial_average_replay[j] = average_replay
-	ten_trial_average_dev_replay[j] = average_dev_replay
-	ten_trial_average_nonreplay[j] = average_nonreplay
-	ten_trial_average_dev_nonreplay[j] = average_dev_nonreplay
-
+########################################################################################################################
 # 3D bar chart
 # fig = plt.figure()
 # ax1 = fig.add_subplot(111, projection='3d')
@@ -596,86 +623,218 @@ for j, key in enumerate(parameters):
 #         plt.savefig("figs/barchart/movie%d.png" % ii)
 
 
-#2D bar charts
-eta = np.array([0.001, 0.01, 0.1, 1, 10])
-tau_e = np.array([0.04, 0.2, 1, 5])
-replay_tau_0_04 = np.zeros(5)
-nonreplay_tau_0_04 = np.zeros(5)
-replay_tau_0_2 = np.zeros(5)
-nonreplay_tau_0_2 = np.zeros(5)
-replay_tau_1 = np.zeros(5)
-nonreplay_tau_1 = np.zeros(5)
-replay_tau_10 = np.zeros(5)
-nonreplay_tau_10 = np.zeros(5)
+########################################################################################################################
+# #2D bar charts
+# eta = np.array([0.001, 0.01, 0.1, 1, 10])
+# tau_e = np.array([0.04, 0.2, 1, 5])
+# replay_tau_0_04 = np.zeros(5)
+# nonreplay_tau_0_04 = np.zeros(5)
+# replay_tau_0_2 = np.zeros(5)
+# nonreplay_tau_0_2 = np.zeros(5)
+# replay_tau_1 = np.zeros(5)
+# nonreplay_tau_1 = np.zeros(5)
+# replay_tau_10 = np.zeros(5)
+# nonreplay_tau_10 = np.zeros(5)
+#
+# replay_tau_0_04_dev = np.zeros((2,5))
+# nonreplay_tau_0_04_dev = np.zeros((2,5))
+# replay_tau_0_2_dev = np.zeros((2,5))
+# nonreplay_tau_0_2_dev = np.zeros((2,5))
+# replay_tau_1_dev = np.zeros((2,5))
+# nonreplay_tau_1_dev = np.zeros((2,5))
+# replay_tau_10_dev = np.zeros((2,5))
+# nonreplay_tau_10_dev = np.zeros((2,5))
+#
+# for i in range(5):
+# 	replay_tau_0_04[i] = ten_trial_average_replay[4 * i]
+# 	nonreplay_tau_0_04[i] = ten_trial_average_nonreplay[4 * i]
+# 	replay_tau_0_2[i] = ten_trial_average_replay[4 * i + 1]
+# 	nonreplay_tau_0_2[i] = ten_trial_average_nonreplay[4 * i + 1]
+# 	replay_tau_1[i] = ten_trial_average_replay[4 * i + 2]
+# 	nonreplay_tau_1[i] = ten_trial_average_nonreplay[4 * i + 2]
+# 	replay_tau_10[i] = ten_trial_average_replay[4 * i + 3]
+# 	nonreplay_tau_10[i] = ten_trial_average_nonreplay[4 * i + 3]
+#
+# 	replay_tau_0_04_dev[1,i] = ten_trial_average_dev_replay[4 * i]
+# 	nonreplay_tau_0_04_dev[1,i] = ten_trial_average_dev_nonreplay[4 * i]
+# 	replay_tau_0_2_dev[1,i] = ten_trial_average_dev_replay[4 * i + 1]
+# 	nonreplay_tau_0_2_dev[1,i] = ten_trial_average_dev_nonreplay[4 * i + 1]
+# 	replay_tau_1_dev[1,i] = ten_trial_average_dev_replay[4 * i + 2]
+# 	nonreplay_tau_1_dev[1,i] = ten_trial_average_dev_nonreplay[4 * i + 2]
+# 	replay_tau_10_dev[1,i] = ten_trial_average_dev_replay[4 * i + 3]
+# 	nonreplay_tau_10_dev[1,i] = ten_trial_average_dev_nonreplay[4 * i + 3]
+#
+# x = np.arange(1, 6)
+# width = 0.4
+#
+# fig, ax = plt.subplots(2, 2)
+#
+# ax[0,0].title.set_text('$\\tau_e = 0.04s$')
+# ax[0,0].bar(x, replay_tau_0_04, width, yerr=replay_tau_0_04_dev)
+# ax[0,0].bar(x + width, nonreplay_tau_0_04, width, yerr=nonreplay_tau_0_04_dev)
+# ax[0,0].set_xticks([1 + width/2, 2 + width/2, 3 + width/2, 4 + width/2, 5 + width/2])
+# ax[0,0].set_xticklabels(eta)
+# ax[0,0].set_ylim(0, 60)
+# ax[0,0].set_xlabel('$\eta$')
+# ax[0,0].set_ylabel('t (s)')
+#
+# ax[0,1].title.set_text('$\\tau_e = 0.2s$')
+# ax[0,1].bar(x, replay_tau_0_2, width, yerr=replay_tau_0_2_dev, label='With Replay')
+# ax[0,1].bar(x + width, nonreplay_tau_0_2, width, yerr=nonreplay_tau_0_2_dev, label='Without Replay')
+# ax[0,1].set_xticks([1 + width/2, 2 + width/2, 3 + width/2, 4 + width/2, 5 + width/2])
+# ax[0,1].set_xticklabels(eta)
+# ax[0,1].set_ylim(0, 60)
+# ax[0,1].set_xlabel('$\eta$')
+# ax[0,1].set_ylabel('t (s)')
+# ax[0,1].legend()
+#
+# ax[1,0].title.set_text('$\\tau_e = 1s$')
+# ax[1,0].bar(x, replay_tau_1, width, yerr=replay_tau_1_dev, label='With Replay')
+# ax[1,0].bar(x + width, nonreplay_tau_1, width, yerr=nonreplay_tau_1_dev, label='Without Replay')
+# ax[1,0].set_xticks([1 + width/2, 2 + width/2, 3 + width/2, 4 + width/2, 5 + width/2])
+# ax[1,0].set_xticklabels(eta)
+# ax[1,0].set_ylim(0, 60)
+# ax[1,0].set_xlabel('$\eta$')
+# ax[1,0].set_ylabel('t (s)')
+#
+# ax[1,1].title.set_text('$\\tau_e = 5s$')
+# ax[1,1].bar(x, replay_tau_10, width, yerr=replay_tau_10_dev)
+# ax[1,1].bar(x + width, nonreplay_tau_10, width, yerr=nonreplay_tau_10_dev)
+# ax[1,1].set_xticks([1 + width/2, 2 + width/2, 3 + width/2, 4 + width/2, 5 + width/2])
+# ax[1,1].set_xticklabels(eta)
+# ax[1,1].set_ylim(0, 60)
+# ax[1,1].set_xlabel('$\eta$')
+# ax[1,1].set_ylabel('t (s)')
+#
+# plt.show()
 
-replay_tau_0_04_dev = np.zeros((2,5))
-nonreplay_tau_0_04_dev = np.zeros((2,5))
-replay_tau_0_2_dev = np.zeros((2,5))
-nonreplay_tau_0_2_dev = np.zeros((2,5))
-replay_tau_1_dev = np.zeros((2,5))
-nonreplay_tau_1_dev = np.zeros((2,5))
-replay_tau_10_dev = np.zeros((2,5))
-nonreplay_tau_10_dev = np.zeros((2,5))
+tau = 5
+eta = [0.001, 0.01, 0.1, 1, 10]
+case = 'replay'
+for e in eta:
+	print(compute_cv(tau, e, case)[0])
 
-for i in range(5):
-	replay_tau_0_04[i] = ten_trial_average_replay[4 * i]
-	nonreplay_tau_0_04[i] = ten_trial_average_nonreplay[4 * i]
-	replay_tau_0_2[i] = ten_trial_average_replay[4 * i + 1]
-	nonreplay_tau_0_2[i] = ten_trial_average_nonreplay[4 * i + 1]
-	replay_tau_1[i] = ten_trial_average_replay[4 * i + 2]
-	nonreplay_tau_1[i] = ten_trial_average_nonreplay[4 * i + 2]
-	replay_tau_10[i] = ten_trial_average_replay[4 * i + 3]
-	nonreplay_tau_10[i] = ten_trial_average_nonreplay[4 * i + 3]
+########################################################################################################################
 
-	replay_tau_0_04_dev[1,i] = ten_trial_average_dev_replay[4 * i]
-	nonreplay_tau_0_04_dev[1,i] = ten_trial_average_dev_nonreplay[4 * i]
-	replay_tau_0_2_dev[1,i] = ten_trial_average_dev_replay[4 * i + 1]
-	nonreplay_tau_0_2_dev[1,i] = ten_trial_average_dev_nonreplay[4 * i + 1]
-	replay_tau_1_dev[1,i] = ten_trial_average_dev_replay[4 * i + 2]
-	nonreplay_tau_1_dev[1,i] = ten_trial_average_dev_nonreplay[4 * i + 2]
-	replay_tau_10_dev[1,i] = ten_trial_average_dev_replay[4 * i + 3]
-	nonreplay_tau_10_dev[1,i] = ten_trial_average_dev_nonreplay[4 * i + 3]
+# # plots saved trajectory data for specified neuron indices and time points
+# time_series = np.load('data/time_series_with_inh.npy')
+# rates_series = np.load('data/rates_series_with_inh.npy')
+# intrinsic_es_series = np.load('data/intrinsic_e_series_with_inh.npy')
+#
+# # ani_saved = animation.FuncAnimation(fig, updatefig_saved, interval=10, blit=True)
+#
+# # Line plots of the place cell activities over time used for the LM paper.
+# cell_indices = [41,51,42,52,43,53,44,54,45,55,46,56,47,57,48,58]
+# # cell_indices = range(50,60)
+# fig_size = (2,6)
+# replay_fig, replay_axes = plt.subplots(len(cell_indices), 2, figsize=fig_size, sharey=True)
+# replay_fig.canvas.set_window_title('Replay Plots')
+# colours = ['purple', 'blue', 'green', 'orange', 'red']
+#
+# replay_fig.text(0.03, 0.55, 'Neuron Index', rotation=90, fontsize=9, fontstyle='normal', fontweight='light')
+# replay_fig.text(0.45, 0.03, 'Time (s)', rotation=0, fontsize=9, fontstyle='normal', fontweight='light')
+#
+# axes_i = 0
+# # The total cell numbers that were active during exploration without their temporal order were [11, 12, 21, 22,
+# # 23, 33, 34, 41, 44, 45, 51, 54, 55, 65, 75, 85]
+#
+#
+# print(np.size(time_series))
+# for num, i in enumerate(cell_indices):
+# 	# if max(rates_series[:,i]) > 10:
+# 	# 	print(i, np.argmax(rates_series[:,i]), max(rates_series[:,i]))
+# 	replay_axes[axes_i, 0].plot(time_series[:], rates_series[:, i], str(float(axes_i) / 25))
+# 	replay_axes[axes_i, 0].set_xlim((0, 4))
+# 	replay_axes[axes_i, 0].set_ylim((0, 100))
+# 	# line_axes[axes_i].get_yaxis().set_visible(False)
+# 	replay_axes[axes_i, 0].get_yaxis().set_ticks([])
+# 	if i != cell_indices[-1]:
+# 		replay_axes[axes_i, 0].get_xaxis().set_visible(False)
+# 	else:
+# 		replay_axes[axes_i, 0].set_xticks((0,1,2,3,4))
+# 		replay_axes[axes_i, 0].set_xticklabels((0, 1, 2, 3,4), size=8)
+# 		# replay_axes[axes_i, 0].set_xlabel('Time (s)')
+# 	replay_axes[axes_i, 0].set_ylabel(str(num+1), labelpad=5, rotation=0, size=8, va='center')
+# 	axes_i += 1
+#
+# axes_i = 0
+# for num, i in enumerate(cell_indices):
+# 	# if max(rates_series[:,i]) > 10:
+# 		# print(i, np.argmax(rates_series[:,i]), max(rates_series[:,i]))
+# 	replay_axes[axes_i, 1].plot(time_series[:], rates_series[:, i], str(float(axes_i) / 25))
+# 	replay_axes[axes_i, 1].set_ylim((0, 100))
+# 	replay_axes[axes_i, 1].set_xlim((4.5,4.9))
+# 	replay_axes[axes_i, 1].get_yaxis().set_ticks([])
+# 	if i != cell_indices[-1]:
+# 		replay_axes[axes_i, 1].get_xaxis().set_visible(False)
+# 	else:
+# 		replay_axes[axes_i, 1].set_xticks((4.5, 4.7, 4.9))
+# 		replay_axes[axes_i, 1].set_xticklabels((4.5, 4.7, 4.9), size=8, position=(1,0))
+# 		# replay_axes[axes_i, 1].set_xlabel('Time (s)')
+# 	# replay_axes[axes_i, 1].set_ylabel(str(num + 1), labelpad=5, rotation=0, size=8, va='center')
+# 	axes_i += 1
+#
+# plt.savefig('line_plot_with_inh')
+#
 
-x = np.arange(1, 6)
-width = 0.4
 
-fig, ax = plt.subplots(2, 2)
 
-ax[0,0].title.set_text('$\\tau_e = 0.04s$')
-ax[0,0].bar(x, replay_tau_0_04, width, yerr=replay_tau_0_04_dev)
-ax[0,0].bar(x + width, nonreplay_tau_0_04, width, yerr=nonreplay_tau_0_04_dev)
-ax[0,0].set_xticks([1 + width/2, 2 + width/2, 3 + width/2, 4 + width/2, 5 + width/2])
-ax[0,0].set_xticklabels(eta)
-ax[0,0].set_ylim(0, 60)
-ax[0,0].set_xlabel('$\eta$')
-ax[0,0].set_ylabel('t (s)')
+# plots saved trajectory data for specified neuron indices and time points
+time_series = np.load('data/time_series_without_inh.npy')
+rates_series = np.load('data/rates_series_without_inh.npy')
+intrinsic_es_series = np.load('data/intrinsic_e_series_without_inh.npy')
 
-ax[1,0].title.set_text('$\\tau_e = 0.2s$')
-ax[1,0].bar(x, replay_tau_0_2, width, yerr=replay_tau_0_2_dev)
-ax[1,0].bar(x + width, nonreplay_tau_0_2, width, yerr=nonreplay_tau_0_2_dev)
-ax[1,0].set_xticks([1 + width/2, 2 + width/2, 3 + width/2, 4 + width/2, 5 + width/2])
-ax[1,0].set_xticklabels(eta)
-ax[1,0].set_ylim(0, 60)
-ax[1,0].set_xlabel('$\eta$')
-ax[1,0].set_ylabel('t (s)')
+# ani_saved = animation.FuncAnimation(fig, updatefig_saved, interval=10, blit=True)
 
-ax[0,1].title.set_text('$\\tau_e = 1s$')
-ax[0,1].bar(x, replay_tau_1, width, yerr=replay_tau_1_dev, label='With Replay')
-ax[0,1].bar(x + width, nonreplay_tau_1, width, yerr=nonreplay_tau_1_dev, label='Without Replay')
-ax[0,1].set_xticks([1 + width/2, 2 + width/2, 3 + width/2, 4 + width/2, 5 + width/2])
-ax[0,1].set_xticklabels(eta)
-ax[0,1].legend()
-ax[0,1].set_ylim(0, 60)
-ax[0,1].set_xlabel('$\eta$')
-ax[0,1].set_ylabel('t (s)')
+# Line plots of the place cell activities over time used for the LM paper.
+cell_indices = [41,51,42,52,43,53,44,54,45,55,46,56,47,57,48,58]
+# cell_indices = range(50,60)
+fig_size = (2,6)
+replay_fig, replay_axes = plt.subplots(len(cell_indices), 2, figsize=fig_size, sharey=True)
+replay_fig.canvas.set_window_title('Replay Plots')
+colours = ['purple', 'blue', 'green', 'orange', 'red']
 
-ax[1,1].title.set_text('$\\tau_e = 10s$')
-ax[1,1].bar(x, replay_tau_10, width, yerr=replay_tau_10_dev)
-ax[1,1].bar(x + width, nonreplay_tau_10, width, yerr=nonreplay_tau_10_dev)
-ax[1,1].set_xticks([1 + width/2, 2 + width/2, 3 + width/2, 4 + width/2, 5 + width/2])
-ax[1,1].set_xticklabels(eta)
-ax[1,1].set_ylim(0, 60)
-ax[1,1].set_xlabel('$\eta$')
-ax[1,1].set_ylabel('t (s)')
+replay_fig.text(0.03, 0.55, 'Neuron Index', rotation=90, fontsize=9, fontstyle='normal', fontweight='light')
+replay_fig.text(0.45, 0.03, 'Time (s)', rotation=0, fontsize=9, fontstyle='normal', fontweight='light')
 
+axes_i = 0
+
+
+
+print(np.size(time_series))
+for num, i in enumerate(cell_indices):
+	# if max(rates_series[:,i]) > 10:
+	# 	print(i, np.argmax(rates_series[:,i]), max(rates_series[:,i]))
+	replay_axes[axes_i, 0].plot(time_series[:], rates_series[:, i], str(float(axes_i) / 25))
+	replay_axes[axes_i, 0].set_xlim((0, 4))
+	replay_axes[axes_i, 0].set_ylim((0, 100))
+	# line_axes[axes_i].get_yaxis().set_visible(False)
+	replay_axes[axes_i, 0].get_yaxis().set_ticks([])
+	if i != cell_indices[-1]:
+		replay_axes[axes_i, 0].get_xaxis().set_visible(False)
+	else:
+		replay_axes[axes_i, 0].set_xticks((0,1,2,3,4))
+		replay_axes[axes_i, 0].set_xticklabels((0, 1, 2, 3,4), size=8)
+		# replay_axes[axes_i, 0].set_xlabel('Time (s)')
+	replay_axes[axes_i, 0].set_ylabel(str(num+1), labelpad=5, rotation=0, size=8, va='center')
+	axes_i += 1
+
+axes_i = 0
+for num, i in enumerate(cell_indices):
+	# if max(rates_series[:,i]) > 10:
+		# print(i, np.argmax(rates_series[:,i]), max(rates_series[:,i]))
+	replay_axes[axes_i, 1].plot(time_series[:], rates_series[:, i], str(float(axes_i) / 25))
+	replay_axes[axes_i, 1].set_ylim((0, 100))
+	replay_axes[axes_i, 1].set_xlim((4.5,4.9))
+	replay_axes[axes_i, 1].get_yaxis().set_ticks([])
+	if i != cell_indices[-1]:
+		replay_axes[axes_i, 1].get_xaxis().set_visible(False)
+	else:
+		replay_axes[axes_i, 1].set_xticks((4.5, 4.7, 4.9))
+		replay_axes[axes_i, 1].set_xticklabels((4.5, 4.7, 4.9), size=8, position=(1,0))
+		# replay_axes[axes_i, 1].set_xlabel('Time (s)')
+	# replay_axes[axes_i, 1].set_ylabel(str(num + 1), labelpad=5, rotation=0, size=8, va='center')
+	axes_i += 1
+
+plt.savefig('line_plot_without_inh')
 plt.show()

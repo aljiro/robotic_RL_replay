@@ -108,9 +108,9 @@ class RoboReplay():
 
 	def signal_handler(self, sig, frame):
 		# print('\nSaving trial data')
-		# np.save('data/time_series.npy', self.time_series)
-		# np.save('data/rates_series.npy', self.rates_series)
-		# np.save('data/intrinsic_e_series.npy', self.intrinsic_e_series)
+		# np.save('data/time_series_with_inh.npy', self.time_series)
+		# np.save('data/rates_series_with_inh.npy', self.rates_series)
+		# np.save('data/intrinsic_e_series_with_inh.npy', self.intrinsic_e_series)
 		#
 		# # clean up the temporary data files
 		# os.remove('data/intrinsic_e.npy')

@@ -253,14 +253,15 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 			rate.sleep()
 
 if __name__ == '__main__':
-	for tau_elig in [1.0]:
-		for eta in [0.002, 0.005]:
+	no_trials = 30
+	for tau_elig in [1]:
+		for eta in [0.01]:
 			with open('data/trial_times/trial_times_NON_REPLAY_FULL.csv', 'a') as trial_times_file:
 				wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
 				wr.writerow("")
 				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
 
-			for experiment in range(1, 41):
-				robo_replay = RobotReplayMain(tau_elig, eta, experiment)
+			for experiment in range(41, 101):
+				robo_replay = RobotReplayMain(tau_elig, eta, no_trials, experiment)
 				robo_replay.main()
 

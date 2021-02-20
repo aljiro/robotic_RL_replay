@@ -117,7 +117,7 @@ x_coords = np.arange(10) / 5 - 0.9
 y_coords = np.flip(np.arange(10) / 5 - 0.9)
 x, y = np.meshgrid(x_coords, y_coords)
 im_weights_arbitrary = ax_weights_arbitrary.quiver(x, y, weight_vectors_x_components_arbitrary,
-                                                   weight_vectors_y_components_arbitrary, EE, scale=20, clim=(0, 3))
+                                                   weight_vectors_y_components_arbitrary, EE, scale=20, clim=(0, 4))
 cbar = fig_weights_arbitrary.colorbar(im_weights_arbitrary, ax=ax_weights_arbitrary)
 # im_weights_arbitrary.set_clim(0, 1)
 
@@ -153,7 +153,7 @@ def updatefig_live_weights_arbitrary(*args):
 		pass
 	im_weights_arbitrary.set_UVC(weight_vectors_x_components_arbitrary, weight_vectors_y_components_arbitrary,
 	                             magnitudes)
-	# im_weights_arbitrary.set_cmap('autumn')
+	im_weights_arbitrary.set_cmap('Blues')
 	# im_weights_arbitrary.set_norm(norm=True)
 	return im_weights_arbitrary
 

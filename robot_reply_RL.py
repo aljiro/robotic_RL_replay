@@ -21,7 +21,7 @@ import miro2 as miro
 
 class NetworkSetup():
 
-	def __init__(self, tau_elig=1, eta=0.05, experiment_number=1):
+	def __init__(self, tau_elig=1, eta=0.05, no_trials=20, experiment_number=1):
 		print("Starting experiment no. " + str(experiment_number) + " with tau_elig = " + str(tau_elig) + " and eta = " +
 		      str(eta))
 
@@ -108,21 +108,8 @@ class NetworkSetup():
 		self.rates_series = []
 		self.intrinsic_e_series = []
 
-		self.total_number_of_trials = 20
+		self.total_number_of_trials = no_trials
 		self.experiment_number = experiment_number
-
-	def signal_handler(self, sig, frame):
-		# print('\nSaving trial data')
-		# np.save('data/time_series.npy', self.time_series)
-		# np.save('data/rates_series.npy', self.rates_series)
-		# np.save('data/intrinsic_e_series.npy', self.intrinsic_e_series)
-		#
-		# # clean up the temporary data files
-		# os.remove('data/intrinsic_e.npy')
-		# os.remove('data/rates_data.npy')
-		# os.remove('data/place_data.npy')
-
-		sys.exit(0)
 
 	####################################################################################################################
 	# ROS callback functions
@@ -517,7 +504,10 @@ class NetworkSetup():
 				omega = A * (diff + 2 * np.pi)
 			self.msg_wheels.twist.linear.x = vel
 			self.msg_wheels.twist.angular.z = omega
-			# self.msg_wheels.twist.angular.z = 0.25 # for testing
+
+			# For testing paths
+			# self.msg_wheels.twist.angular.z = 0.35 # for testing
+
 			self.pub_wheels.publish(self.msg_wheels)
 
 	def random_walk(self, current_theta, current_target_theta):
