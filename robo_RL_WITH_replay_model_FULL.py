@@ -48,7 +48,14 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 		# self.intrinsic_e = np.ones(self.network_size) # used to test the network with no intrinsic plasticity
 
 		trial_times = [] # used to store the time taken in a given trial to reach the reward
+		random_times = []
+		hitting_count = []
 		t_trial = 0
+		t_action = 0.0
+		t_random = 0.0
+		self.wall_hitting = 0
+
+
 		while not rospy.core.is_shutdown():
 			rate = rospy.Rate(int(1 / self.delta_t))
 			self.t += self.delta_t
@@ -85,7 +92,7 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 
 			if self.reward_val == 0:
 				# Run standard activity during exploration. No weights changes here, since R=0
-
+				
 				self.replay = False
 				t_replay = 0
 				t_trial += self.delta_t
@@ -126,7 +133,14 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 
 					if t_trial != 0 and t_trial > 1:
 						trial_times.append(t_trial)
-					t_trial = 0
+						random_times.append(t_random/(t_random + t_action))
+						hitting_count.append(self.wall_hitting)
+						print("New trial no. " + str(len(random_times)))
+					t_trial = 0 # Maybe this should be inside the if
+					t_action = 0.0
+					t_random = 0.0
+					self.wall_hitting = 0
+
 				self.replay = True
 				t_replay += self.delta_t
 
@@ -177,10 +191,16 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 
 			# If t_trial > 120s, then MiRo has been searching too long. Start a new trial.
 			if t_trial > 120:
+				print('Took too long')
 				self.intrinsic_e = self.intrinsic_e_reset.copy()
 				self.elig_trace = np.zeros((self.network_size_ac, self.network_size_pc))
 				trial_times.append(120)
+				random_times.append(t_random/(t_random + t_action))
+				t_action = 0.0
+				t_random = 0.0
+				self.wall_hitting = 0
 				t_trial = 0
+				print("New trial (Time out) no. " + str(len(random_times)))
 				self.head_random_start_position = True
 
 			# Miro controller
@@ -196,7 +216,7 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 				randtheta = np.random.random() * (2 * np.pi - 0.0001) # between 0 and 2*pi (minus a little to avoid
 				# 2*pi itself
 				random_start_position = np.array((randx, randy, randtheta))
-				# print("Heading to a random position at location ", random_start_position)
+				print("Heading to a random position at location ", random_start_position)
 				self.head_to_position(random_start_position)
 				print("Reached the start position. Starting experiment-trial number " + str(self.experiment_number) +
 				      "-" + str(len(trial_times)) + ".")
@@ -209,10 +229,14 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 					# self.target_theta, _ = self.action_cell_to_theta_and_magnitude(self.action_cell_vals_noise)
 					ac_direction, ac_magnitude = self.action_cell_to_theta_and_magnitude(self.action_cell_vals)
 					if ac_magnitude >= 1:
+    					# Choosing action cells
+						t_action = t_action + 1.0
 						ac_direction_noise = self.add_noise_to_action_cell_outputs(self.action_cell_vals, self.sigma)
 						self.target_theta, _ = self.action_cell_to_theta_and_magnitude(ac_direction_noise)
 						# t_last_command = self.t
 					else:
+    					# Random walk
+						t_random = t_random + 1.0
 						self.target_theta = self.random_walk(theta_prev, self.target_theta)
 					t_last_command = self.t
 
@@ -249,8 +273,17 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 				with open('data/trial_times/trial_times_WITH_REPLAY_FULL.csv', 'a') as trial_times_file:
 					wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
 					wr.writerow([self.experiment_number] + trial_times)
+				with open('data/trial_times/random_times_WITH_REPLAY_FULL.csv', 'a') as random_times_file:
+					wr = csv.writer(random_times_file, quoting=csv.QUOTE_ALL)
+					wr.writerow([self.experiment_number] + random_times)
+				with open('data/trial_times/hitting_WITH_REPLAY_FULL.csv', 'a') as random_times_file:
+					wr = csv.writer(random_times_file, quoting=csv.QUOTE_ALL)
+					wr.writerow([self.experiment_number] + hitting_count)
+				
+					
 				print("Experiment " + str(self.experiment_number) + " finished. Trial times are \n")
-				print(trial_times)
+				# print("Trial times: " + str(trial_times))
+				# print("Percentage spent in random walk: " + str(random_times))
 				print("\n -------------------------------------------------------------------------------- \n")
 				break # break out of the rospy while loop
 
@@ -262,6 +295,16 @@ if __name__ == '__main__':
 		for eta in [0.1, 1]:
 			with open('data/trial_times/trial_times_WITH_REPLAY_FULL.csv', 'a') as trial_times_file:
 				wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
+				wr.writerow("")
+				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
+
+			with open('data/trial_times/random_times_WITH_REPLAY_FULL.csv', 'a') as random_times_file:
+				wr = csv.writer(random_times_file, quoting=csv.QUOTE_ALL)
+				wr.writerow("")
+				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
+			
+			with open('data/trial_times/hitting_WITH_REPLAY_FULL.csv', 'a') as hitting_file:
+				wr = csv.writer(hitting_file, quoting=csv.QUOTE_ALL)
 				wr.writerow("")
 				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
 

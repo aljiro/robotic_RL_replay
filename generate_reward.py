@@ -42,8 +42,8 @@ class RewardFunction:
 		robot_position_y = robot_position.y
 		if abs(robot_position.x - self.reward_location_xy[0]) < 0.15 and abs(robot_position.y - \
 		                                                                  self.reward_location_xy[1]) < 0.15:
-			#print("Found the reward!!!")
-			#print(self.coords, self.reward_location_xy)
+			print("Found the reward!!!")
+			print(self.coords, self.reward_location_xy)
 			self.reward = 1
 		else:
 			self.reward = 0

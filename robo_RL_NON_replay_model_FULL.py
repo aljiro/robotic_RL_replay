@@ -36,7 +36,10 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 		# self.intrinsic_e = np.ones(self.network_size) # used to test the network with no intrinsic plasticity
 
 		trial_times = [] # used to store the time taken in a given trial to reach the reward
+		random_times = []
 		t_trial = 0
+		t_action = 0
+		t_random = 0
 
 		np.save('data/weight_at_start.npy', self.weights_pc_ac) # save the weights at the start of the experiment
 
@@ -117,7 +120,11 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 
 					if t_trial != 0 and t_trial > 1:
 						trial_times.append(t_trial)
+						random_times.append(t_random/(t_random + t_action))
 					t_trial = 0
+					t_action = 0.0
+					t_random = 0.0
+
 				self.replay = True
 				t_replay += self.delta_t
 
@@ -175,6 +182,9 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 				self.intrinsic_e = self.intrinsic_e_reset.copy()
 				self.elig_trace = np.zeros((self.network_size_ac, self.network_size_pc))
 				trial_times.append(120)
+				random_times.append(t_random/(t_random + t_action))
+				t_random = 0.0
+				t_action = 0.0
 				t_trial = 0
 				self.head_random_start_position = True
 
@@ -204,11 +214,16 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 					# self.target_theta, _ = self.action_cell_to_theta_and_magnitude(self.action_cell_vals_noise)
 					ac_direction, ac_magnitude = self.action_cell_to_theta_and_magnitude(self.action_cell_vals)
 					if ac_magnitude >= 1:
+    					# Action cells activates
+						t_action = t_action + 1.0
 						ac_direction_noise = self.add_noise_to_action_cell_outputs(self.action_cell_vals, self.sigma)
 						self.target_theta, _ = self.action_cell_to_theta_and_magnitude(ac_direction_noise)
 						# t_last_command = self.t
 					else:
+						# Random walk 
+						t_random = t_random + 1.0
 						self.target_theta = self.random_walk(theta_prev, self.target_theta)
+
 					t_last_command = self.t
 
 					# np.savetxt('rates.csv', place_cell_rates_prev, delimiter=',')
@@ -245,6 +260,9 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 				with open('data/trial_times/trial_times_NON_REPLAY_FULL.csv', 'a') as trial_times_file:
 					wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
 					wr.writerow([self.experiment_number] + trial_times)
+				with open('data/trial_times/random_times_NON_REPLAY_FULL.csv', 'a') as random_times_file:
+					wr = csv.writer(random_times_file, quoting=csv.QUOTE_ALL)
+					wr.writerow([self.experiment_number] + random_times)
 				print("Experiment " + str(self.experiment_number) + " finished. Trial times are \n")
 				print(trial_times)
 				print("\n -------------------------------------------------------------------------------- \n")
@@ -258,6 +276,11 @@ if __name__ == '__main__':
 		for eta in [0.01]:
 			with open('data/trial_times/trial_times_NON_REPLAY_FULL.csv', 'a') as trial_times_file:
 				wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
+				wr.writerow("")
+				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
+
+			with open('data/trial_times/random_times_NON_REPLAY_FULL.csv', 'a') as random_times_file:
+				wr = csv.writer(random_times_file, quoting=csv.QUOTE_ALL)
 				wr.writerow("")
 				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
 

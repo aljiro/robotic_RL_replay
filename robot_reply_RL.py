@@ -110,6 +110,7 @@ class NetworkSetup():
 
 		self.total_number_of_trials = no_trials
 		self.experiment_number = experiment_number
+		self.wall_hitting = 0
 
 	####################################################################################################################
 	# ROS callback functions
@@ -488,7 +489,9 @@ class NetworkSetup():
 		# target_theta direction
 		# vel = 0  # max = 0.4 m/s, min = -0.4 m/s
 		# omega = 0  # pos = anticlockwise; max = +- 5 rad/s
-		if self.sonar_val < 0.03:
+		if self.sonar_val < 0.05:
+			print("Hitting the wall")
+			self.wall_hitting += 1
 			self.avoid_wall()
 			self.target_theta = self.body_pose[2] # keeps MiRo positioned in the new orientation, rather than turning
 		# around to the previous one (which led towards the wall)
@@ -560,15 +563,17 @@ class NetworkSetup():
 		A = 1
 		vel_max = 0.2
 		current_pose = self.body_pose.copy()
+
 		diff_x = target_pose[0] - current_pose[0]
 		diff_y = target_pose[1] - current_pose[1]
 		distance_from_pos = np.sqrt(diff_x ** 2 + diff_y ** 2)
 		while distance_from_pos > 0.02:
 			# wall avoidance
-			#if self.sonar_val < 0.005:
-			#	self.avoid_wall()
-			#	self.target_theta = self.body_pose[2]
-
+			if self.sonar_val < 0.01:
+				print("Hitting wall - head to position")
+				self.avoid_wall()
+				self.target_theta = self.body_pose[2]
+			# print("Reaching home: " + str(current_pose))
 			current_pose = self.body_pose.copy()
 			diff_x = target_pose[0] - current_pose[0]
 			diff_y = target_pose[1] - current_pose[1]
@@ -595,7 +600,7 @@ class NetworkSetup():
 			self.msg_wheels.twist.linear.x = vel
 			self.msg_wheels.twist.angular.z = omega
 			self.pub_wheels.publish(self.msg_wheels)
-			# print("Distance from home is: ", distance_from_pos)
+			print("Distance from home is: ", distance_from_pos)
 
 		# turn around to face the correct angular pose
 		self.msg_wheels.twist.linear.x = 0
