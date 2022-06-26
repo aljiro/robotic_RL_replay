@@ -17,6 +17,7 @@ import sys
 import csv
 import time
 import miro2 as miro
+import gc
 
 
 class NetworkSetup():
@@ -489,9 +490,10 @@ class NetworkSetup():
 		# target_theta direction
 		# vel = 0  # max = 0.4 m/s, min = -0.4 m/s
 		# omega = 0  # pos = anticlockwise; max = +- 5 rad/s
-		if self.sonar_val < 0.05:
-			print("Hitting the wall")
-			self.wall_hitting += 1
+		if self.sonar_val < 0.03:
+			if np.abs(self.msg_wheels.twist.angular.z)  < 0.5:
+				print("Hitting the wall")
+				self.wall_hitting += 1
 			self.avoid_wall()
 			self.target_theta = self.body_pose[2] # keeps MiRo positioned in the new orientation, rather than turning
 		# around to the previous one (which led towards the wall)
@@ -554,6 +556,8 @@ class NetworkSetup():
 		while time.time() - t_init < 2.5:
 			self.pub_wheels.publish(self.msg_wheels)
 
+		gc.collect()
+
 	def stop_movement(self):
 		self.msg_wheels.twist.linear.x = 0
 		self.msg_wheels.twist.angular.z = 0
@@ -570,9 +574,10 @@ class NetworkSetup():
 		while distance_from_pos > 0.02:
 			# wall avoidance
 			if self.sonar_val < 0.01:
-				print("Hitting wall - head to position")
-				self.avoid_wall()
-				self.target_theta = self.body_pose[2]
+				if np.abs(self.msg_wheels.twist.angular.z) < 1.0:
+					print("Hitting wall - head to position")
+					self.avoid_wall()
+					self.target_theta = self.body_pose[2]
 			# print("Reaching home: " + str(current_pose))
 			current_pose = self.body_pose.copy()
 			diff_x = target_pose[0] - current_pose[0]
@@ -600,7 +605,7 @@ class NetworkSetup():
 			self.msg_wheels.twist.linear.x = vel
 			self.msg_wheels.twist.angular.z = omega
 			self.pub_wheels.publish(self.msg_wheels)
-			print("Distance from home is: ", distance_from_pos)
+			time.sleep(0.1)
 
 		# turn around to face the correct angular pose
 		self.msg_wheels.twist.linear.x = 0

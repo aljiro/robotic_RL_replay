@@ -18,12 +18,25 @@ import csv
 import time
 import miro2 as miro
 import robot_reply_RL
+import gc
 
 
 class RobotReplayMain(robot_reply_RL.NetworkSetup):
 	# Inherits the methods from the NetworkSetup class in the main "robot_replay_RL" module. That provides all the
 	# methods for network setup and dynamics. See class for a full list of variable names and methods.
 
+	def signal_handler(self, sig, frame): # handles tasks for when closing the program with ctrl+c
+		print('\nSaving trial data')
+		np.save('data/time_series_without_inh.npy', self.time_series)
+		np.save('data/rates_series_without_inh.npy', self.rates_series)
+		np.save('data/intrinsic_e_series_without_inh.npy', self.intrinsic_e_series)
+
+		# clean up the temporary data files
+		os.remove('data/intrinsic_e.npy')
+		os.remove('data/rates_data.npy')
+		os.remove('data/place_data.npy')
+
+		sys.exit(0)
 ########################################################################################################################
 # The main portion of the program that starts the ROS loop, runs the MiRo controller and updates all the model variables
 	def main(self):
@@ -37,9 +50,11 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 
 		trial_times = [] # used to store the time taken in a given trial to reach the reward
 		random_times = []
+		hitting_count = []
 		t_trial = 0
 		t_action = 0
 		t_random = 0
+		self.wall_hitting = 0
 
 		np.save('data/weight_at_start.npy', self.weights_pc_ac) # save the weights at the start of the experiment
 
@@ -54,10 +69,12 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 			theta = self.body_pose[2]
 			movement_x = coords[0] - coords_prev[0]
 			movement_y = coords[1] - coords_prev[1]
+
 			if movement_x > 0.0 or movement_y > 0.0:  # at least a movement velocity of 0.002 / delta_t is required
 				movement = True
 			else:
 				movement = False
+
 			movement = True
 			# Set current variable values to the previous ones
 			coords_prev = coords.copy()
@@ -121,9 +138,11 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 					if t_trial != 0 and t_trial > 1:
 						trial_times.append(t_trial)
 						random_times.append(t_random/(t_random + t_action))
+						hitting_count.append(self.wall_hitting)
 					t_trial = 0
 					t_action = 0.0
 					t_random = 0.0
+					self.wall_hitting = 0
 
 				self.replay = True
 				t_replay += self.delta_t
@@ -183,9 +202,12 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 				self.elig_trace = np.zeros((self.network_size_ac, self.network_size_pc))
 				trial_times.append(120)
 				random_times.append(t_random/(t_random + t_action))
+				hitting_count.append(self.wall_hitting)
 				t_random = 0.0
 				t_action = 0.0
 				t_trial = 0
+				self.wall_hitting = 0
+				print("New trial (Time out) no. " + str(len(random_times)))
 				self.head_random_start_position = True
 
 			# Miro controller
@@ -201,10 +223,11 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 				randtheta = np.random.random() * (2 * np.pi - 0.0001) # between 0 and 2*pi (minus a little to avoid
 				# 2*pi itself
 				random_start_position = np.array((randx, randy, randtheta))
-				# print("Heading to a random position at location ", random_start_position)
+				print("Heading to a random position at location ", random_start_position)
 				self.head_to_position(random_start_position)
 				print("Reached the start position. Starting experiment-trial number " + str(self.experiment_number) +
 				      "-" + str(len(trial_times)) + ".")
+				gc.collect()
 				self.head_random_start_position = False
 				theta_prev = self.body_pose[2] # need to reset for the controller below
 
@@ -263,6 +286,10 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 				with open('data/trial_times/random_times_NON_REPLAY_FULL.csv', 'a') as random_times_file:
 					wr = csv.writer(random_times_file, quoting=csv.QUOTE_ALL)
 					wr.writerow([self.experiment_number] + random_times)
+				with open('data/trial_times/hitting_NON_REPLAY_FULL.csv', 'a') as hitting_times_file:
+					wr = csv.writer(hitting_times_file, quoting=csv.QUOTE_ALL)
+					wr.writerow([self.experiment_number] + hitting_count)
+
 				print("Experiment " + str(self.experiment_number) + " finished. Trial times are \n")
 				print(trial_times)
 				print("\n -------------------------------------------------------------------------------- \n")
@@ -284,7 +311,12 @@ if __name__ == '__main__':
 				wr.writerow("")
 				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
 
-			for experiment in range(41, 101):
+			with open('data/trial_times/hitting_NON_REPLAY_FULL.csv', 'a') as hitting_file:
+				wr = csv.writer(hitting_file, quoting=csv.QUOTE_ALL)
+				wr.writerow("")
+				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
+
+			for experiment in range(1, 41):
 				robo_replay = RobotReplayMain(tau_elig, eta, no_trials, experiment)
 				robo_replay.main()
 

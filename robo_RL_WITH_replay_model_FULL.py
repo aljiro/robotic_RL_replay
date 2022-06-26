@@ -18,6 +18,7 @@ import csv
 import time
 import miro2 as miro
 import robot_reply_RL
+import gc
 
 
 class RobotReplayMain(robot_reply_RL.NetworkSetup):
@@ -196,6 +197,7 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 				self.elig_trace = np.zeros((self.network_size_ac, self.network_size_pc))
 				trial_times.append(120)
 				random_times.append(t_random/(t_random + t_action))
+				hitting_count.append(self.wall_hitting)
 				t_action = 0.0
 				t_random = 0.0
 				self.wall_hitting = 0
@@ -220,6 +222,7 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 				self.head_to_position(random_start_position)
 				print("Reached the start position. Starting experiment-trial number " + str(self.experiment_number) +
 				      "-" + str(len(trial_times)) + ".")
+				gc.collect()
 				self.head_random_start_position = False
 				theta_prev = self.body_pose[2] # need to reset for the controller below
 
@@ -291,8 +294,8 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 
 if __name__ == '__main__':
 	no_trials = 30
-	for tau_elig in [0.04, 0.2]:
-		for eta in [0.1, 1]:
+	for tau_elig in [0.04]:
+		for eta in [1]:
 			with open('data/trial_times/trial_times_WITH_REPLAY_FULL.csv', 'a') as trial_times_file:
 				wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
 				wr.writerow("")
