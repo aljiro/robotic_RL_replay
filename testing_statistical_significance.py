@@ -126,6 +126,11 @@ with open('data/trial_times/trial_times_WITH_REPLAY_plot.csv', newline='') as fi
 		if (19 * step + 2 <= i < 20 * step):
 			results_full_replay['tau=5_eta=10'].append([float(j) for j in row[1:]])
 
+
+from scipy import stats
+
+
+
 tau_replay = '0.04'
 eta_replay = '1'
 tau_nonreplay = '1'
@@ -137,6 +142,8 @@ for j in range(20):
 		data1[i] = results_full_replay['tau=' + tau_replay + '_eta=' + eta_replay][i][j]
 		data2[i] = results_full_nonreplay['tau=' + tau_nonreplay + '_eta=' + eta_nonreplay][i][j]
 	_, p_value = wilcoxon(data1, data2)
+	#perform Friedman Test
+	_, p_value_f = stats.friedmanchisquare(data1, data2)
 	print(data1)
 	print(data2)
 	print('p-value for trial ' + str(j+1) + ' is: ' + str(p_value))

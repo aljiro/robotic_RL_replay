@@ -51,10 +51,14 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 		trial_times = [] # used to store the time taken in a given trial to reach the reward
 		random_times = []
 		hitting_count = []
+		ac_activations = []
+		total_counts = []
 		t_trial = 0
-		t_action = 0
-		t_random = 0
+		t_action = 0.0
+		t_random = 0.0
 		self.wall_hitting = 0
+		ac_average = 0.0
+		total_counter = 0.0
 
 		np.save('data/weight_at_start.npy', self.weights_pc_ac) # save the weights at the start of the experiment
 
@@ -137,11 +141,15 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 
 					if t_trial != 0 and t_trial > 1:
 						trial_times.append(t_trial)
-						random_times.append(t_random/(t_random + t_action))
+						random_times.append(t_random)
 						hitting_count.append(self.wall_hitting)
+						ac_activations.append(ac_average/total_counter)
+						total_counts.append(total_counter)
 					t_trial = 0
 					t_action = 0.0
 					t_random = 0.0
+					ac_average = 0.0
+					total_counter = 0.0
 					self.wall_hitting = 0
 
 				self.replay = True
@@ -201,11 +209,15 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 				self.intrinsic_e = self.intrinsic_e_reset.copy()
 				self.elig_trace = np.zeros((self.network_size_ac, self.network_size_pc))
 				trial_times.append(120)
-				random_times.append(t_random/(t_random + t_action))
+				random_times.append(t_random)
 				hitting_count.append(self.wall_hitting)
-				t_random = 0.0
+				ac_activations.append(ac_average/total_counter)
+				total_counts.append(total_counter)
 				t_action = 0.0
+				t_random = 0.0
 				t_trial = 0
+				total_counter = 0.0
+				ac_average = 0.0
 				self.wall_hitting = 0
 				print("New trial (Time out) no. " + str(len(random_times)))
 				self.head_random_start_position = True
@@ -236,6 +248,9 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 				if self.t - t_last_command > 0.5: # send a command once every half a second
 					# self.target_theta, _ = self.action_cell_to_theta_and_magnitude(self.action_cell_vals_noise)
 					ac_direction, ac_magnitude = self.action_cell_to_theta_and_magnitude(self.action_cell_vals)
+					ac_average += ac_magnitude
+					total_counter += 1.0
+
 					if ac_magnitude >= 1:
     					# Action cells activates
 						t_action = t_action + 1.0
@@ -289,7 +304,13 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 				with open('data/trial_times/hitting_NON_REPLAY_FULL.csv', 'a') as hitting_times_file:
 					wr = csv.writer(hitting_times_file, quoting=csv.QUOTE_ALL)
 					wr.writerow([self.experiment_number] + hitting_count)
-
+				with open('data/trial_times/activations_NON_REPLAY_FULL.csv', 'a') as activations_times_file:
+					wr = csv.writer(activations_times_file, quoting=csv.QUOTE_ALL)
+					wr.writerow([self.experiment_number] + ac_activations)
+				with open('data/trial_times/total_counts_NON_REPLAY_FULL.csv', 'a') as total_times_file:
+					wr = csv.writer(total_times_file, quoting=csv.QUOTE_ALL)
+					wr.writerow([self.experiment_number] + total_counts)
+				
 				print("Experiment " + str(self.experiment_number) + " finished. Trial times are \n")
 				print(trial_times)
 				print("\n -------------------------------------------------------------------------------- \n")
@@ -300,7 +321,7 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 if __name__ == '__main__':
 	no_trials = 30
 	for tau_elig in [1]:
-		for eta in [0.01]:
+		for eta in [0.1]:
 			with open('data/trial_times/trial_times_NON_REPLAY_FULL.csv', 'a') as trial_times_file:
 				wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
 				wr.writerow("")
@@ -313,6 +334,16 @@ if __name__ == '__main__':
 
 			with open('data/trial_times/hitting_NON_REPLAY_FULL.csv', 'a') as hitting_file:
 				wr = csv.writer(hitting_file, quoting=csv.QUOTE_ALL)
+				wr.writerow("")
+				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
+
+			with open('data/trial_times/activations_NON_REPLAY_FULL.csv', 'a') as activation_file:
+				wr = csv.writer(activation_file, quoting=csv.QUOTE_ALL)
+				wr.writerow("")
+				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
+			
+			with open('data/trial_times/total_counts_NON_REPLAY_FULL.csv', 'a') as total_file:
+				wr = csv.writer(total_file, quoting=csv.QUOTE_ALL)
 				wr.writerow("")
 				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
 
