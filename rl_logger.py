@@ -32,5 +32,5 @@ class RLLogger:
 
             with open(filename, 'a') as f:
                 wr = csv.writer(f, quoting=csv.QUOTE_ALL)
-                wr.writerow([experiment_number] + data[self.pnames])
+                wr.writerow([experiment_number] + data[self.pnames[i]])
            

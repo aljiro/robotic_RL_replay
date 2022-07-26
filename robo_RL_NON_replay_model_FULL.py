@@ -14,12 +14,13 @@ import numpy as np
 import os
 import signal
 import sys
-import csv
 import time
 import miro2 as miro
 import robot_reply_RL
 import gc
+from rl_logger import RLLogger
 
+logger = RLLogger( True )
 
 class RobotReplayMain(robot_reply_RL.NetworkSetup):
 	# Inherits the methods from the NetworkSetup class in the main "robot_replay_RL" module. That provides all the
@@ -295,21 +296,13 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 
 			if len(trial_times) == self.total_number_of_trials:
 				np.save('data/weight_at_end.npy', self.weights_pc_ac) # save the weights at the end of the experiment
-				with open('data/trial_times/trial_times_NON_REPLAY_FULL.csv', 'a') as trial_times_file:
-					wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
-					wr.writerow([self.experiment_number] + trial_times)
-				with open('data/trial_times/random_times_NON_REPLAY_FULL.csv', 'a') as random_times_file:
-					wr = csv.writer(random_times_file, quoting=csv.QUOTE_ALL)
-					wr.writerow([self.experiment_number] + random_times)
-				with open('data/trial_times/hitting_NON_REPLAY_FULL.csv', 'a') as hitting_times_file:
-					wr = csv.writer(hitting_times_file, quoting=csv.QUOTE_ALL)
-					wr.writerow([self.experiment_number] + hitting_count)
-				with open('data/trial_times/activations_NON_REPLAY_FULL.csv', 'a') as activations_times_file:
-					wr = csv.writer(activations_times_file, quoting=csv.QUOTE_ALL)
-					wr.writerow([self.experiment_number] + ac_activations)
-				with open('data/trial_times/total_counts_NON_REPLAY_FULL.csv', 'a') as total_times_file:
-					wr = csv.writer(total_times_file, quoting=csv.QUOTE_ALL)
-					wr.writerow([self.experiment_number] + total_counts)
+				data = {"trial_times": trial_times, 
+						"random_times": random_times, 
+						"hitting": hitting_count, 
+						"activations": ac_activations, 
+						"total_counts": total_counts}
+
+				logger.saveAll( self.experiment_number, data )			
 				
 				print("Experiment " + str(self.experiment_number) + " finished. Trial times are \n")
 				print(trial_times)
@@ -319,35 +312,17 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 			rate.sleep()
 
 if __name__ == '__main__':
-	no_trials = 30
-	for tau_elig in [1]:
-		for eta in [0.1]:
-			with open('data/trial_times/trial_times_NON_REPLAY_FULL.csv', 'a') as trial_times_file:
-				wr = csv.writer(trial_times_file, quoting=csv.QUOTE_ALL)
-				wr.writerow("")
-				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
+	with open('parameters.json', 'r') as f:
+  		parameters = json.load(f)
 
-			with open('data/trial_times/random_times_NON_REPLAY_FULL.csv', 'a') as random_times_file:
-				wr = csv.writer(random_times_file, quoting=csv.QUOTE_ALL)
-				wr.writerow("")
-				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
+	no_trials = parameters["no_trials"]
+	no_exps = parameters["no_experiments"]
 
-			with open('data/trial_times/hitting_NON_REPLAY_FULL.csv', 'a') as hitting_file:
-				wr = csv.writer(hitting_file, quoting=csv.QUOTE_ALL)
-				wr.writerow("")
-				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
+	for tau_elig in [parameters["figure4"]["non_replay"]["tau_elig"]]:
+		for eta in [parameters["figure4"]["non_replay"]["eta"]]:
+			logger.initialize(tau_elig, eta)
 
-			with open('data/trial_times/activations_NON_REPLAY_FULL.csv', 'a') as activation_file:
-				wr = csv.writer(activation_file, quoting=csv.QUOTE_ALL)
-				wr.writerow("")
-				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
-			
-			with open('data/trial_times/total_counts_NON_REPLAY_FULL.csv', 'a') as total_file:
-				wr = csv.writer(total_file, quoting=csv.QUOTE_ALL)
-				wr.writerow("")
-				wr.writerow(["tau_elig=" + str(tau_elig), "eta=" + str(eta)])
-
-			for experiment in range(1, 41):
+			for experiment in range(1, no_exps):
 				robo_replay = RobotReplayMain(tau_elig, eta, no_trials, experiment)
 				robo_replay.main()
 
