@@ -1,0 +1,28 @@
+{
+"no_trials": 30,
+"no_experiments": 40,
+"figure4": 
+    {"with_replay": 
+        {
+        "tau_elig": 1.0,
+        "eta": 0.1
+        },
+    "non_replay":
+        {
+            "tau_elig": 1.0,
+            "eta": 0.1
+        }
+    },
+"best_case":
+    {"with_replay": 
+        {
+        "tau_elig": 0.04,
+        "eta": 1.0
+        },
+    "non_replay":
+        {
+            "tau_elig": 1.0,
+            "eta": 0.01
+        }
+    }
+}
