@@ -25,13 +25,14 @@ percentiles_non_replay = []
 percentiles_replay = []
 
 # Loading the random walk data
-with open('data/trial_times/activations_NON_REPLAY_final.csv', newline='') as file:
+gazebo = "exp_gazebo9"
+with open("data/trial_times/%s/activations_NON_REPLAY_FULL.csv"%gazebo, newline='') as file:
 	data = csv.reader(file, delimiter=',')
 	for i, row in enumerate(data):
 		if (1 <= i < N_EXP):
 			results_non_replay.append([float(j) for j in row[1:]])
 
-with open('data/trial_times/activations_WITH_REPLAY_final.csv', newline='') as file:
+with open("data/trial_times/%s/activations_WITH_REPLAY_FULL.csv"%gazebo, newline='') as file:
 	data = csv.reader(file, delimiter=',')
 	for i, row in enumerate(data):
 		if (1 <= i < N_EXP):
@@ -102,5 +103,5 @@ plt.fill_between(np.arange(1, 31), np.array(means_non_replay_mov_avg) - np.array
                        np.array(means_non_replay_mov_avg) + np.array(std_devs_non_replay_mov_avg),
                        alpha=0.2)
 plt.legend()
-plt.savefig('activations_comparison.png')
+plt.savefig("activations_comparison_%s.png"%gazebo)
 plt.show()

@@ -25,15 +25,16 @@ percentiles_non_replay = []
 percentiles_replay = []
 
 N_EXP = 3
+gazebo = "exp_gazebo7"
 # Loading the random walk data
-with open('data/trial_times/random_times_NON_REPLAY_final.csv', newline='') as file:
+with open("data/trial_times/%s/random_times_NON_REPLAY_FULL.csv"%gazebo, newline='') as file:
 	data = csv.reader(file, delimiter=',')
 	for i, row in enumerate(data):
 		if (1 <= i < N_EXP):
 			results_non_replay.append([float(j) for j in row[1:]])
 
 
-with open('data/trial_times/random_times_WITH_REPLAY_final.csv', newline='') as file:
+with open("data/trial_times/%s/random_times_WITH_REPLAY_FULL.csv"%gazebo, newline='') as file:
 	data = csv.reader(file, delimiter=',')
 	for i, row in enumerate(data):
 		if (1 <= i < N_EXP):
@@ -103,6 +104,7 @@ plt.fill_between(np.arange(1, 31), np.array(means_replay_mov_avg) - np.array(std
 plt.fill_between(np.arange(1, 31), np.array(means_non_replay_mov_avg) - np.array(std_devs_non_replay_mov_avg),
                        np.array(means_non_replay_mov_avg) + np.array(std_devs_non_replay_mov_avg),
                        alpha=0.2)
+plt.ylim((0, 100))
 plt.legend()
-plt.savefig('random_walk_comparison.png')
+plt.savefig("random_walk_comparison_%s.png"%gazebo)
 plt.show()
