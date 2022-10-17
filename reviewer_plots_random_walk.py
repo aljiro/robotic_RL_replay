@@ -25,7 +25,7 @@ percentiles_non_replay = []
 percentiles_replay = []
 
 N_EXP = 3
-gazebo = "exp_gazebo7"
+gazebo = "exp_gazebo7_best"
 # Loading the random walk data
 with open("data/trial_times/%s/random_times_NON_REPLAY_FULL.csv"%gazebo, newline='') as file:
 	data = csv.reader(file, delimiter=',')
