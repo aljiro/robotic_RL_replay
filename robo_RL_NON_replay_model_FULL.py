@@ -306,7 +306,7 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 				logger.saveAll( self.experiment_number, data )			
 				
 				print("Experiment " + str(self.experiment_number) + " finished. Trial times are \n")
-				print(trial_times)
+
 				print("\n -------------------------------------------------------------------------------- \n")
 				break # break out of the rospy while loop
 

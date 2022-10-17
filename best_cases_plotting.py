@@ -20,14 +20,20 @@ std_devs_replay = []
 percentiles_non_replay = []
 percentiles_replay = []
 
+dir = 'best_gazebo9'
 # Storing the data
-with open('data/trial_times/best_case_NON_REPLAY.csv', newline='') as file:
+with open('data/trial_times/' + dir + '/best_case_NON_REPLAY.csv', newline='') as file:
 	data = csv.reader(file, delimiter=',')
 	for i, row in enumerate(data):
 		if (2 <= i < 102):
 			results_non_replay.append([float(j) for j in row[1:]])
 
-with open('data/trial_times/best_case_WITH_REPLAY.csv', newline='') as file:
+# fname = 'best_case_WITH_REPLAYtau02tau1'
+# fname = 'best_case_WITH_REPLAYtau02tau01'
+fname = 'best_case_WITH_REPLAYtau004eta01'
+# fname = 'best_case_WITH_REPLAY'
+
+with open('data/trial_times/'+ dir +'/' + fname + '.csv', newline='') as file:
 	data = csv.reader(file, delimiter=',')
 	for i, row in enumerate(data):
 		if (2 <= i < 102):
