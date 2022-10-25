@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import csv
 import copy
 
-N_EXP = 3
+N_EXP = 34
 results_non_replay = []
 results_replay = []
 means_non_replay = []
@@ -25,7 +25,7 @@ percentiles_non_replay = []
 percentiles_replay = []
 
 # Loading the random walk data
-gazebo = "exp_gazebo9"
+gazebo = "best_gazebo7_correct"
 with open("data/trial_times/%s/activations_NON_REPLAY_FULL.csv"%gazebo, newline='') as file:
 	data = csv.reader(file, delimiter=',')
 	for i, row in enumerate(data):

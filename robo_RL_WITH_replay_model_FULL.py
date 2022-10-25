@@ -108,17 +108,41 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 
 				# Update the variables
 				# Place cells
-				self.currents = self.update_currents(currents_prev, self.delta_t, intrinsic_e_prev,
-				                                     network_weights_prev, place_cell_rates_prev, stp_d_prev, stp_f_prev,
-				                                     I_inh_prev, I_place_prev)
+				self.currents = self.update_currents(currents_prev, 
+													 self.delta_t, 
+													 intrinsic_e_prev,
+				                                     network_weights_prev, 
+													 place_cell_rates_prev, 
+													 stp_d_prev, 
+													 stp_f_prev,
+				                 	                 I_inh_prev, 
+													 I_place_prev)
+
 				self.place_cell_rates = self.compute_rates(self.currents)
-				self.intrinsic_e = self.update_intrinsic_e(intrinsic_e_prev, self.delta_t, place_cell_rates_prev)
-				self.stp_d, self.stp_f = self.update_STP(stp_d_prev, stp_f_prev, self.delta_t, place_cell_rates_prev)
-				self.I_place = self.compute_place_cell_activities(coords_prev[0], coords_prev[1], 0, movement)
-				self.I_inh = self.update_I_inh(I_inh_prev, self.delta_t, self.w_inh, place_cell_rates_prev)
+
+				self.intrinsic_e = self.update_intrinsic_e(intrinsic_e_prev, 
+														   self.delta_t, 
+														   place_cell_rates_prev)
+
+				self.stp_d, self.stp_f = self.update_STP(stp_d_prev, 
+														 stp_f_prev, 
+														 self.delta_t, 
+														 place_cell_rates_prev)
+
+				self.I_place = self.compute_place_cell_activities(coords_prev[0], 
+																  coords_prev[1], 
+																  0, 
+																  movement)
+				
+				self.I_inh = self.update_I_inh(I_inh_prev, 
+											   self.delta_t, 
+											   self.w_inh, 
+											   place_cell_rates_prev)
 
 				# Action cells
-				self.action_cell_vals = self.compute_action_cell_outputs(weights_pc_ac_prev, place_cell_rates_prev)
+				self.action_cell_vals = self.compute_action_cell_outputs(weights_pc_ac_prev, 
+																		 place_cell_rates_prev)
+				
 				self.action_cell_vals_noise = self.theta_to_action_cell(theta_prev)
 				# print(self.action_cell_vals_noise, self.action_cell_vals)
 				self.elig_trace = self.update_eligibility_trace(elig_trace_prev,
@@ -132,13 +156,14 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 				if not self.replay:
 					print('Running reverse replay event')
 					elig_trace_at_reward = np.zeros((self.network_size_ac, self.network_size_pc))
+					# Equation 17
 					for i in range(72):
 						for j in range(100):
 							if elig_trace_prev[i, j] > 0:
 								elig_trace_at_reward[i, j] = 0.1
 							elif elig_trace_prev[i, j] < 0:
-								# elig_trace_at_reward[i, j] = -0.1
-								elig_trace_at_reward[i, j] = 0
+								elig_trace_at_reward[i, j] = -0.1
+								# elig_trace_at_reward[i, j] = 0
 
 					if t_trial != 0 and t_trial > 1:
 						trial_times.append(t_trial)
@@ -159,7 +184,7 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 
 				if (1 < t_replay < 1.1):
 					# To run reverse replays
-					I_place = 2 * self.I_place
+					I_place = self.I_place
 				else:
 					I_place = np.zeros(self.network_size_pc)
 
@@ -170,26 +195,54 @@ class RobotReplayMain(robot_reply_RL.NetworkSetup):
 
 				# Update variables
 				# Place cells (should initiate a reverse replay)
-				self.currents = self.update_currents(currents_prev, self.delta_t, intrinsic_e_prev,
-				                                     network_weights_prev, place_cell_rates_prev, stp_d_prev, stp_f_prev,
-				                                     I_inh_prev, I_place, replay=self.replay)
+				self.currents = self.update_currents(currents_prev, 
+													 self.delta_t, 
+													 intrinsic_e_prev,
+				                                     network_weights_prev, 
+													 place_cell_rates_prev, 
+													 stp_d_prev, 
+													 stp_f_prev,
+				                                     I_inh_prev, 
+													 I_place, 
+													 replay=self.replay)
+
 				self.place_cell_rates = self.compute_rates(self.currents)
-				self.intrinsic_e = self.update_intrinsic_e(intrinsic_e_prev, self.delta_t, place_cell_rates_prev)
-				self.stp_d, self.stp_f = self.update_STP(stp_d_prev, stp_f_prev, self.delta_t, place_cell_rates_prev)
-				self.I_inh = self.update_I_inh(I_inh_prev, self.delta_t, self.w_inh, place_cell_rates_prev)
+
+				self.intrinsic_e = self.update_intrinsic_e(intrinsic_e_prev, 
+														   self.delta_t, 
+														   place_cell_rates_prev)
+
+				self.stp_d, self.stp_f = self.update_STP(stp_d_prev, 
+														 stp_f_prev, 
+														 self.delta_t, 
+														 place_cell_rates_prev)
+
+				self.I_inh = self.update_I_inh(I_inh_prev, 
+											   self.delta_t, 
+											   self.w_inh, 
+											   place_cell_rates_prev)
 
 				# Action cells and weights
-				self.weights_pc_ac = self.weight_updates(weights_pc_ac_prev, self.reward_val,
+				self.weights_pc_ac = self.weight_updates(weights_pc_ac_prev, 
+														 self.reward_val,
 				                                         elig_trace_prev,
-				                                         self.eta, self.sigma, self.delta_t)
+				                                         self.eta, 
+														 self.sigma, 
+														 self.delta_t)
+
 				self.elig_trace = self.update_eligibility_trace(elig_trace_prev,
 				                                                place_cell_rates_prev,
 				                                                action_cell_vals_prev,
 				                                                action_cell_vals_noise_prev,
 				                                                self.tau_elig, self.delta_t)
-				self.action_cell_vals = self.compute_action_cell_outputs(weights_pc_ac_prev, place_cell_rates_prev)
+
+				self.action_cell_vals = self.compute_action_cell_outputs(weights_pc_ac_prev, 
+																		 place_cell_rates_prev)
+
+				
 				self.action_cell_vals_noise = self.action_cell_vals + self.compute_action_cell_outputs(
 					weights_pc_ac_prev + elig_trace_at_reward, place_cell_rates_prev)
+
 
 				if t_replay > 2:
 					# finish running the replay event, reset variables that need resetting, and go to a random position

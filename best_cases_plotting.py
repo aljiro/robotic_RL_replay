@@ -20,7 +20,7 @@ std_devs_replay = []
 percentiles_non_replay = []
 percentiles_replay = []
 
-dir = 'best_gazebo9'
+dir = 'exp_gazebo7_wo2'
 # Storing the data
 with open('data/trial_times/' + dir + '/best_case_NON_REPLAY.csv', newline='') as file:
 	data = csv.reader(file, delimiter=',')
@@ -30,8 +30,8 @@ with open('data/trial_times/' + dir + '/best_case_NON_REPLAY.csv', newline='') a
 
 # fname = 'best_case_WITH_REPLAYtau02tau1'
 # fname = 'best_case_WITH_REPLAYtau02tau01'
-fname = 'best_case_WITH_REPLAYtau004eta01'
-# fname = 'best_case_WITH_REPLAY'
+# fname = 'best_case_WITH_REPLAYtau004eta01'
+fname = 'best_case_WITH_REPLAY'
 
 with open('data/trial_times/'+ dir +'/' + fname + '.csv', newline='') as file:
 	data = csv.reader(file, delimiter=',')
