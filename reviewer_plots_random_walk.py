@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import csv
 import copy
+from plot_util import *
 
 
 results_non_replay = []
@@ -24,7 +25,7 @@ std_devs_replay = []
 percentiles_non_replay = []
 percentiles_replay = []
 
-N_EXP = 25
+N_EXP = 39
 gazebo = "best_gazebo7_correct"
 # Loading the random walk data
 with open("data/trial_times/%s/random_times_NON_REPLAY_FULL.csv"%gazebo, newline='') as file:
@@ -57,54 +58,9 @@ for trial_no in range(len(results_non_replay[0])):
 results_non_replay = results_change_up_non_replay
 results_replay = results_change_up_replay
 
-# Computing the means and standard deviations
-for trial_no in range(len(results_non_replay)):
-	means_non_replay.append(np.mean(results_non_replay[trial_no]))
-	means_replay.append(np.mean(results_replay[trial_no]))
-	std_devs_non_replay.append(np.std(results_non_replay[trial_no]))
-	std_devs_replay.append(np.std(results_replay[trial_no]))
+options = {'ylabel': 'Number of times the random walk\nmodule was used',
+		   'figname': "random_walk_comparison_%s.png"%gazebo,
+		   'ylim': (0, 70), 'loc': 'best'}
 
-# Getting moving averages from the data
-means_non_replay_mov_avg = []
-means_replay_mov_avg = []
-std_devs_non_replay_mov_avg = []
-std_devs_replay_mov_avg = []
-for i in range(30):
-	if i == 0:
-		means_non_replay_mov_avg.append((means_non_replay[0] + means_non_replay[1]) / 2)
-		means_replay_mov_avg.append((means_replay[0] + means_replay[1]) / 2)
-		std_devs_non_replay_mov_avg.append((std_devs_non_replay[0] + std_devs_non_replay[1]) / 2)
-		std_devs_replay_mov_avg.append((std_devs_replay[0] + std_devs_replay[1]) / 2)
-	elif i == 29:
-		means_non_replay_mov_avg.append((means_non_replay[28] + means_non_replay[29]) / 2)
-		means_replay_mov_avg.append((means_replay[28] + means_replay[29]) / 2)
-		std_devs_non_replay_mov_avg.append((std_devs_non_replay[28] + std_devs_non_replay[29]) / 2)
-		std_devs_replay_mov_avg.append((std_devs_replay[28] + std_devs_replay[29]) / 2)
-	else:
-		means_non_replay_mov_avg.append((means_non_replay[i - 1] + means_non_replay[i] + means_non_replay[i + 1])  / 3)
-		means_replay_mov_avg.append((means_replay[i - 1] + means_replay[i] + means_replay[i + 1]) / 3)
-		std_devs_non_replay_mov_avg.append((std_devs_non_replay[i - 1] + std_devs_non_replay[i] +
-		                                    std_devs_non_replay[i + 1]) / 3)
-		std_devs_replay_mov_avg.append((std_devs_replay[i - 1] + std_devs_replay[i] + std_devs_replay[i + 1]) / 3)
-
-# plot averages
-
-plt.plot(np.arange(1, 31), means_replay_mov_avg, label='With Replay')
-plt.plot(np.arange(1, 31), means_non_replay_mov_avg, label='Without Replay')
-# plt.title('Best cases comparison')
-# plt.ylim(0, 60)
-# plt.xlim(1, 30)
-plt.xlabel('Trial No.')
-plt.ylabel('Number of times the random walk\nmodule was used')
-
-# plot standard deviations
-plt.fill_between(np.arange(1, 31), np.array(means_replay_mov_avg) - np.array(std_devs_replay_mov_avg),
-                       np.array(means_replay_mov_avg) + np.array(std_devs_replay_mov_avg),
-                       alpha=0.4)
-plt.fill_between(np.arange(1, 31), np.array(means_non_replay_mov_avg) - np.array(std_devs_non_replay_mov_avg),
-                       np.array(means_non_replay_mov_avg) + np.array(std_devs_non_replay_mov_avg),
-                       alpha=0.2)
-plt.ylim((0, 100))
-plt.legend()
-plt.savefig("random_walk_comparison_%s.png"%gazebo)
-plt.show()
+plotLineSeries(results_replay, results_non_replay, options)
+# plotBoxSeries(results_replay, results_non_replay, options)
